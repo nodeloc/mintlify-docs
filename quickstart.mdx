@@ -1,80 +1,88 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "快速开始"
+description: "Nodeloc 论坛新用户快速指南"
 ---
 
-## Get started in three steps
+## 三步快速上手 Nodeloc
 
-Get your documentation site running locally and make your first customization.
+让你快速注册、发帖、互动，并熟悉社区规则。
 
-### Step 1: Set up your local environment
+### 第 1 步：注册与登录
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+  <Accordion icon="user-plus" title="创建账号">
+    1. 打开 [Nodeloc 主页](https://www.nodeloc.com)。
+    2. 点击右上角“注册”按钮。
+    3. 填写用户名、邮箱和密码，完成注册。
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+    <Tip>请使用真实邮箱，以便找回密码和接收通知。</Tip>
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+
+  <Accordion icon="sign-in-alt" title="登录论坛">
+    1. 点击右上角“登录”按钮。
+    2. 输入注册时的邮箱和密码。
+    3. 登录成功后，可以设置头像和签名。
   </Accordion>
 </AccordionGroup>
 
-### Step 2: Deploy your changes
+### 第 2 步：参与社区
 
 <AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+  <Accordion icon="comments" title="发帖与回复">
+    - 在首页选择感兴趣的版块，点击“新主题”创建帖子。
+    - 阅读其他用户的帖子，点击“回复”参与讨论。
+    - 使用编辑器工具栏可添加图片、表情和格式化文字。
+  </Accordion>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Accordion icon="trophy" title="积分与等级">
+    - 每发帖、回复、点赞都可以获得积分。
+    - 随着积分积累，你的用户等级会提升，解锁更多功能。
+    - 查看你的积分和等级：[个人资料 → 活动概览](https://www.nodeloc.com/my/activity)。
+  </Accordion>
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
+  <Accordion icon="bell" title="通知与私信">
+    - 点击右上角铃铛查看新通知。
+    - 使用私信与其他用户私下交流。
+    - 可在设置中调整通知偏好。
   </Accordion>
 </AccordionGroup>
 
-### Step 3: Go live
+### 第 3 步：社区规则与安全
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+<AccordionGroup>
+  <Accordion icon="gavel" title="遵守社区规则">
+    - 阅读 [社区规则](https://www.nodeloc.com/rules) 以了解发帖规范。
+    - 尊重他人，避免发布违规内容。
+  </Accordion>
 
-## Next steps
+  <Accordion icon="shield-alt" title="账号安全">
+    - 使用强密码并开启邮箱验证。
+    - 遇到账号异常或发现滥用行为，请及时联系管理员。
+  </Accordion>
+</AccordionGroup>
 
-Now that you have your docs running, explore these key features:
+## 下一步推荐
 
 <CardGroup cols={2}>
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
+<Card title="浏览版块" icon="th-large" href="/categories">
+  了解各个版块的主题和讨论内容。
 </Card>
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
+<Card title="常见问题" icon="question-circle" href="/faq">
+  查阅新手常见问题，快速解决疑问。
 </Card>
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
+<Card title="自定义设置" icon="sliders" href="/my/preferences">
+  调整界面、通知和个人资料设置。
 </Card>
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
+<Card title="社区支持" icon="hands-helping" href="https://www.nodeloc.com">
+  浏览社区获取更多帮助，与其他用户交流经验。
 </Card>
 
 </CardGroup>
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  **遇到问题？** 请查看 [Nodeloc 帮助中心](https://docs.nodeloc.com) 或在社区发帖求助。
 </Note>
