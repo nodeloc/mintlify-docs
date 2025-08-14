@@ -18,14 +18,14 @@
             "pages": [
               "index",
               "quickstart",
-              "development"
+              "level"
             ]
           },
           {
-            "group": "Customization",
+            "group": "常用",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "common/lottery",
+              "common/telegram"
             ]
           },
           {
