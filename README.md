@@ -1,44 +1,36 @@
-# Mintlify Starter Kit
+# 📚 共建 Nodeloc 知识库
 
-Use the starter kit to get your docs deployed and ready to customize.
+Nodeloc 知识库致力于为社区用户提供 **准确、实用、易懂** 的功能说明与使用指南。  
+它属于所有 Nodeloc 用户，每一位成员都可以参与建设，让内容更完善。
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+---
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+## 🚀 如何参与贡献
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+1. **Fork** 本仓库到你的 GitHub 账号  
+2. 在本地修改或新增文档（支持 Markdown/MDX）  
+3. **提交 Pull Request**，并在 PR 描述中写明修改原因和内容  
+4. 等待维护者审核并合并  
 
-## Development
+📌 **注意事项：**
+- 内容需真实准确，不包含误导性信息  
+- 遵守社区规则和法律法规  
+- 不得直接复制受版权保护内容  
+- 文档格式请与现有内容保持一致（标题、表格、代码块等）
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
+---
 
-```
-npm i -g mint
-```
+## 🏆 贡献者
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+感谢所有为知识库提供内容、修正与建议的朋友 ❤️
 
-```
-mint dev
-```
+<a href="https://github.com/nodeloc/docs/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=nodeloc/docs" />
+</a>
 
-View your local preview at `http://localhost:3000`.
+---
 
-## Publishing changes
+## 📢 加入我们
 
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
+你的每一次修改、每一条建议，都会让知识库更好，并在贡献者名单中永久保留。
 
-## Need help?
-
-### Troubleshooting
-
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
-- [Mintlify community](https://mintlify.com/community)
