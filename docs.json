@@ -18,7 +18,8 @@
             "pages": [
               "index",
               "quickstart",
-              "level"
+              "level",
+              "create"
             ]
           },
           {
