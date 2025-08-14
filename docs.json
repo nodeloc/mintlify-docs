@@ -1,13 +1,13 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Nodeloc 知识库",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
     "dark": "#15803D"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/favicon.png",
   "navigation": {
     "tabs": [
       {
@@ -48,10 +48,10 @@
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "OIDC/Oauth2 API reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "OIDC/Oauth2 API documentation",
             "pages": [
               "api-reference/introduction"
             ]
@@ -72,17 +72,17 @@
       "anchors": [
         {
           "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
+          "href": "https://docs.nodeloc.com",
           "icon": "book-open-cover"
         },
         {
           "anchor": "Community",
-          "href": "https://mintlify.com/community",
+          "href": "https://www.nodeloc.com",
           "icon": "slack"
         },
         {
           "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
+          "href": "https://blog.nodeloc.com",
           "icon": "newspaper"
         }
       ]
