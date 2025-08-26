@@ -1,17 +1,15 @@
 ---
-title: "OAuth2对接"
-description: "NodeLoc OAuth2是一个基于Discourse的SSO的身份认证服务，允许应用程序使用NL用户系统进行身份验证和授权"
+title: "NodeLoc OAuth2对接文档"
+description: "NL OAuth2是一个基于Discourse的SSO的身份认证服务，允许应用程序使用NL用户系统进行身份验证和授权"
 ---
-
----
-
-import { Callout } from 'nextra/components'
 
 # NodeLoc OAuth2对接文档
 
 ## 概述
 
- \<Callout type="info"\> NL OAuth2是一个基于Discourse的SSO的身份认证服务，允许应用程序使用NL用户系统进行身份验证和授权。 \</Callout\> 
+<Info>
+  NL OAuth2是一个基于Discourse的SSO的身份认证服务，允许应用程序使用NL用户系统进行身份验证和授权。
+</Info>
 
 **服务端点:**
 
@@ -29,7 +27,9 @@ import { Callout } from 'nextra/components'
 3. 登录后点击"Create New Application"
 4. 填写应用信息并创建
 
- \<Callout type="warning"\> **重要**: 保存显示的Client Secret，它只会显示一次 \</Callout\> 
+<Warning>
+  **重要**: 保存显示的Client Secret，它只会显示一次
+</Warning>
 
 ### 步骤2: 获取应用凭据
 
@@ -41,29 +41,124 @@ import { Callout } from 'nextra/components'
 
 ### 步骤3: 实现OAuth流程
 
- \<Callout type="default"\> #### 标准OAuth2流程 1. 重定向用户到授权页面 2. 用户同意后获取授权码 3. 使用授权码交换访问令牌 4. 使用令牌获取用户信息 \</Callout\> 
+<Steps>
+  <Step title="重定向用户到授权页面">
+    引导用户访问授权URL进行身份验证
+  </Step>
+  <Step title="用户同意后获取授权码">
+    用户同意授权后，系统会重定向到你的回调地址并携带授权码
+  </Step>
+  <Step title="使用授权码交换访问令牌">
+    在后端使用授权码向令牌端点请求访问令牌
+  </Step>
+  <Step title="使用令牌获取用户信息">
+    使用访问令牌调用用户信息端点获取用户详细信息
+  </Step>
+</Steps>
 
 ## API 参考
 
 ### 授权端点
 
+<CodeGroup>
+
+```javascript JavaScript
+const authUrl = 'https://conn.nodeloc.cc/oauth2/auth?' + new URLSearchParams({
+  response_type: 'code',
+  client_id: 'YOUR_CLIENT_ID',
+  redirect_uri: 'https://myapp.com/callback',
+  scope: 'openid profile',
+  state: 'random_state_string'
+});
+
+window.location.href = authUrl;
+```
+
+
+```python Python
+from urllib.parse import urlencode
+
+params = {
+    'response_type': 'code',
+    'client_id': 'YOUR_CLIENT_ID',
+    'redirect_uri': 'https://myapp.com/callback',
+    'scope': 'openid profile',
+    'state': 'random_state_string'
+}
+
+auth_url = f"https://conn.nodeloc.cc/oauth2/auth?{urlencode(params)}"
+```
+
+
+```bash cURL
+curl "https://conn.nodeloc.cc/oauth2/auth?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=https://myapp.com/callback&scope=openid%20profile&state=random_state"
+```
+
+</CodeGroup>
+
 **GET** `/oauth2/auth`
 
 | 参数              | 类型     | 必需 | 说明                   |
-| :-------------- | :----- | :-- | :------------------- |
+| --------------- | ------ | --- | -------------------- |
 | `response_type` | string | ✅  | 固定值: `code`          |
 | `client_id`     | string | ✅  | 应用Client ID          |
 | `redirect_uri`  | string | ✅  | 回调地址                 |
 | `scope`         | string | ⚪  | 建议: `openid profile` |
 | `state`         | string | ⚪  | 防CSRF随机字符串           |
 
-**示例URL:**
-
-```
-https://conn.nodeloc.cc/oauth2/auth?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=https://myapp.com/callback&scope=openid profile&state=random_state
-```
-
 ### 令牌端点
+
+<CodeGroup>
+
+```javascript JavaScript
+const response = await fetch('https://conn.nodeloc.cc/oauth2/token', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Basic ' + btoa('CLIENT_ID:CLIENT_SECRET'),
+    'Content-Type': 'application/x-www-form-urlencoded'
+  },
+  body: new URLSearchParams({
+    grant_type: 'authorization_code',
+    code: 'authorization_code_here',
+    redirect_uri: 'https://myapp.com/callback'
+  })
+});
+
+const tokens = await response.json();
+```
+
+
+```python Python
+import requests
+import base64
+
+auth_header = base64.b64encode(b'CLIENT_ID:CLIENT_SECRET').decode()
+
+response = requests.post(
+    'https://conn.nodeloc.cc/oauth2/token',
+    data={
+        'grant_type': 'authorization_code',
+        'code': 'authorization_code_here',
+        'redirect_uri': 'https://myapp.com/callback'
+    },
+    headers={
+        'Authorization': f'Basic {auth_header}',
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+)
+
+tokens = response.json()
+```
+
+
+```bash cURL
+curl -X POST https://conn.nodeloc.cc/oauth2/token \
+  -H "Authorization: Basic $(echo -n 'CLIENT_ID:CLIENT_SECRET' | base64)" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=authorization_code&code=AUTH_CODE&redirect_uri=https://myapp.com/callback"
+```
+
+</CodeGroup>
 
 **POST** `/oauth2/token`
 
@@ -87,7 +182,7 @@ Content-Type: application/x-www-form-urlencoded
 
 **响应:**
 
-```
+```json
 {
   "access_token": "访问令牌",
   "token_type": "Bearer",
@@ -99,6 +194,36 @@ Content-Type: application/x-www-form-urlencoded
 
 ### 用户信息端点
 
+<CodeGroup>
+
+```javascript JavaScript
+const userResponse = await fetch('https://conn.nodeloc.cc/oauth2/userinfo', {
+  headers: {
+    'Authorization': 'Bearer ' + access_token
+  }
+});
+
+const userInfo = await userResponse.json();
+```
+
+
+```python Python
+response = requests.get(
+    'https://conn.nodeloc.cc/oauth2/userinfo',
+    headers={'Authorization': f'Bearer {access_token}'}
+)
+
+user_info = response.json()
+```
+
+
+```bash cURL
+curl -H "Authorization: Bearer ACCESS_TOKEN" \
+  https://conn.nodeloc.cc/oauth2/userinfo
+```
+
+</CodeGroup>
+
 **GET** `/oauth2/userinfo`
 
 **请求头:**
@@ -109,7 +234,7 @@ Authorization: Bearer {access_token}
 
 **响应:**
 
-```
+```json
 {
   "sub": "用户ID",
   "username": "用户名",
@@ -120,9 +245,11 @@ Authorization: Bearer {access_token}
 
 ## 代码集成
 
-### JavaScript 客户端类
+### JavaScript 客户端
 
-```
+<CodeGroup>
+
+```javascript 完整客户端类
 class NodeLocOAuth2Client {
   constructor(clientId, clientSecret, redirectUri) {
     this.clientId = clientId;
@@ -211,9 +338,8 @@ class NodeLocOAuth2Client {
 }
 ```
 
-### 使用示例
 
-```
+```javascript 使用示例
 // 初始化客户端
 const oauth2Client = new NodeLocOAuth2Client(
   'your_client_id',
@@ -247,101 +373,13 @@ async function handleOAuthCallback(code) {
 }
 ```
 
-### Python Flask 集成
-
-```
-import requests
-import base64
-import json
-from urllib.parse import urlencode
-from flask import Flask, request, redirect, session, jsonify
-
-class NodeLocOAuth2Client:
-    def __init__(self, client_id, client_secret, redirect_uri):
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.redirect_uri = redirect_uri
-        self.base_url = 'https://conn.nodeloc.cc'
-    
-    def get_auth_url(self, state=None):
-        params = {
-            'response_type': 'code',
-            'client_id': self.client_id,
-            'redirect_uri': self.redirect_uri,
-            'scope': 'openid profile'
-        }
-        if state:
-            params['state'] = state
-        return f"{self.base_url}/oauth2/auth?{urlencode(params)}"
-    
-    def exchange_code_for_tokens(self, code):
-        auth_header = base64.b64encode(
-            f"{self.client_id}:{self.client_secret}".encode()
-        ).decode()
-        
-        response = requests.post(
-            f"{self.base_url}/oauth2/token",
-            data={
-                'grant_type': 'authorization_code',
-                'code': code,
-                'redirect_uri': self.redirect_uri
-            },
-            headers={
-                'Authorization': f'Basic {auth_header}',
-                'Content-Type': 'application/x-www-form-urlencoded'
-            }
-        )
-        response.raise_for_status()
-        return response.json()
-    
-    def get_user_info(self, access_token):
-        response = requests.get(
-            f"{self.base_url}/oauth2/userinfo",
-            headers={'Authorization': f'Bearer {access_token}'}
-        )
-        response.raise_for_status()
-        return response.json()
-
-# Flask应用示例
-app = Flask(__name__)
-app.secret_key = 'your-secret-key'
-
-oauth2_client = NodeLocOAuth2Client(
-    'your_client_id',
-    'your_client_secret',
-    'https://yourapp.com/auth/callback'
-)
-
-@app.route('/login')
-def login():
-    auth_url = oauth2_client.get_auth_url('random_state')
-    return redirect(auth_url)
-
-@app.route('/auth/callback')
-def callback():
-    code = request.args.get('code')
-    
-    tokens = oauth2_client.exchange_code_for_tokens(code)
-    user_info = oauth2_client.get_user_info(tokens['access_token'])
-    
-    session['user'] = user_info
-    session['tokens'] = tokens
-    
-    return redirect('/dashboard')
-
-@app.route('/dashboard')
-def dashboard():
-    if 'user' not in session:
-        return redirect('/login')
-    return jsonify(session['user'])
-```
+</CodeGroup>
 
 ### Node.js Express 集成
 
-```
+```javascript
 const express = require('express');
 const session = require('express-session');
-const { NodeLocOAuth2Client } = require('./oauth2-client'); // 假设保存为单独文件
 
 const app = express();
 app.use(session({
@@ -400,6 +438,105 @@ app.listen(3000, () => {
 });
 ```
 
+### Python Flask 集成
+
+<CodeGroup>
+
+```python 完整客户端类
+import requests
+import base64
+import json
+from urllib.parse import urlencode
+
+class NodeLocOAuth2Client:
+    def __init__(self, client_id, client_secret, redirect_uri):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.redirect_uri = redirect_uri
+        self.base_url = 'https://conn.nodeloc.cc'
+    
+    def get_auth_url(self, state=None):
+        params = {
+            'response_type': 'code',
+            'client_id': self.client_id,
+            'redirect_uri': self.redirect_uri,
+            'scope': 'openid profile'
+        }
+        if state:
+            params['state'] = state
+        return f"{self.base_url}/oauth2/auth?{urlencode(params)}"
+    
+    def exchange_code_for_tokens(self, code):
+        auth_header = base64.b64encode(
+            f"{self.client_id}:{self.client_secret}".encode()
+        ).decode()
+        
+        response = requests.post(
+            f"{self.base_url}/oauth2/token",
+            data={
+                'grant_type': 'authorization_code',
+                'code': code,
+                'redirect_uri': self.redirect_uri
+            },
+            headers={
+                'Authorization': f'Basic {auth_header}',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        )
+        response.raise_for_status()
+        return response.json()
+    
+    def get_user_info(self, access_token):
+        response = requests.get(
+            f"{self.base_url}/oauth2/userinfo",
+            headers={'Authorization': f'Bearer {access_token}'}
+        )
+        response.raise_for_status()
+        return response.json()
+```
+
+
+```python Flask应用示例
+from flask import Flask, request, redirect, session, jsonify
+
+app = Flask(__name__)
+app.secret_key = 'your-secret-key'
+
+oauth2_client = NodeLocOAuth2Client(
+    'your_client_id',
+    'your_client_secret',
+    'https://yourapp.com/auth/callback'
+)
+
+@app.route('/login')
+def login():
+    auth_url = oauth2_client.get_auth_url('random_state')
+    return redirect(auth_url)
+
+@app.route('/auth/callback')
+def callback():
+    code = request.args.get('code')
+    
+    tokens = oauth2_client.exchange_code_for_tokens(code)
+    user_info = oauth2_client.get_user_info(tokens['access_token'])
+    
+    session['user'] = user_info
+    session['tokens'] = tokens
+    
+    return redirect('/dashboard')
+
+@app.route('/dashboard')
+def dashboard():
+    if 'user' not in session:
+        return redirect('/login')
+    return jsonify(session['user'])
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+</CodeGroup>
+
 ## 应用管理 API
 
 ### 获取应用列表
@@ -408,7 +545,7 @@ app.listen(3000, () => {
 
 **响应:**
 
-```
+```json
 [
   {
     "client_id": "应用ID",
@@ -426,7 +563,7 @@ app.listen(3000, () => {
 
 **请求体:**
 
-```
+```json
 {
   "name": "应用名称",
   "description": "应用描述",
@@ -438,7 +575,7 @@ app.listen(3000, () => {
 
 **响应:**
 
-```
+```json
 {
   "client_id": "生成的应用ID",
   "client_secret": "生成的密钥",
@@ -451,7 +588,9 @@ app.listen(3000, () => {
 
 ### 客户端密钥保护
 
- \<Callout type="error"\> **永远不要**在前端代码中暴露Client Secret \</Callout\> 
+<Danger>
+  **永远不要**在前端代码中暴露Client Secret
+</Danger>
 
 - 使用环境变量存储敏感信息
 - 定期轮换客户端密钥
@@ -459,9 +598,13 @@ app.listen(3000, () => {
 
 ### CSRF 防护
 
-- 始终使用随机的`state`参数
+<Tip>
+  始终使用随机的`state`参数防止CSRF攻击
+</Tip>
+
 - 在回调中验证`state`参数
 - 使用HTTPS传输所有敏感数据
+- 实现会话超时机制
 
 ### 令牌管理
 
@@ -480,7 +623,7 @@ app.listen(3000, () => {
 ### 常见错误代码
 
 | 错误                       | HTTP状态 | 说明                 | 解决方案            |
-| :----------------------- | :----- | :----------------- | :-------------- |
+| ------------------------ | ------ | ------------------ | --------------- |
 | `invalid_client`         | 401    | Client ID/Secret错误 | 检查应用凭据          |
 | `invalid_grant`          | 400    | 授权码无效/过期           | 重新获取授权码         |
 | `invalid_redirect_uri`   | 400    | 回调URI不匹配           | 检查注册的URI        |
@@ -489,7 +632,7 @@ app.listen(3000, () => {
 
 ### 错误响应格式
 
-```
+```json
 {
   "error": "invalid_client",
   "error_description": "Client authentication failed"
@@ -498,7 +641,9 @@ app.listen(3000, () => {
 
 ### 错误处理示例
 
-```
+<CodeGroup>
+
+```javascript JavaScript
 async function handleOAuthError(error) {
   if (error.message.includes('invalid_client')) {
     console.error('客户端认证失败，请检查Client ID和Secret');
@@ -514,38 +659,68 @@ async function handleOAuthError(error) {
 }
 ```
 
+
+```python Python
+def handle_oauth_error(error):
+    if 'invalid_client' in str(error):
+        print('客户端认证失败，请检查Client ID和Secret')
+        # 重定向到配置页面
+    elif 'invalid_grant' in str(error):
+        print('授权码无效或过期，重新获取授权')
+        # 重新发起授权流程
+        return redirect('/login')
+    else:
+        print(f'未知OAuth错误: {error}')
+        # 显示通用错误信息
+```
+
+</CodeGroup>
+
 ## 测试和调试
 
 ### 使用 cURL 测试
 
-```
-# 1. 获取授权码 (在浏览器中访问)
-# https://conn.nodeloc.cc/oauth2/auth?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=https://yourapp.com/callback&scope=openid
+<Steps>
+  <Step title="获取授权码">
+    在浏览器中访问授权URL：
 
-# 2. 交换访问令牌
-curl -X POST https://conn.nodeloc.cc/oauth2/token \
-  -H "Authorization: Basic $(echo -n 'CLIENT_ID:CLIENT_SECRET' | base64)" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=authorization_code&code=AUTH_CODE&redirect_uri=https://yourapp.com/callback"
-
-# 3. 获取用户信息
-curl -H "Authorization: Bearer ACCESS_TOKEN" \
-  https://conn.nodeloc.cc/oauth2/userinfo
-```
+    ```
+    https://conn.nodeloc.cc/oauth2/auth?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=https://yourapp.com/callback&scope=openid
+    ```
+  </Step>
+  <Step title="交换访问令牌">
+    ```bash
+    curl -X POST https://conn.nodeloc.cc/oauth2/token \
+      -H "Authorization: Basic $(echo -n 'CLIENT_ID:CLIENT_SECRET' | base64)" \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "grant_type=authorization_code&code=AUTH_CODE&redirect_uri=https://yourapp.com/callback"
+    ```
+  </Step>
+  <Step title="获取用户信息">
+    ```bash
+    curl -H "Authorization: Bearer ACCESS_TOKEN" \
+      https://conn.nodeloc.cc/oauth2/userinfo
+    ```
+  </Step>
+</Steps>
 
 ### 在线调试工具
 
 使用 [OpenID Connect Debugger](https://oidcdebugger.com/)：
 
-1. Authorize URI: `https://conn.nodeloc.cc/oauth2/auth`
-2. Client ID: 你的应用ID
-3. Scope: `openid profile`
-4. Response Type: `code`
+<Note>
+  **配置信息:**
+
+  - Authorize URI: `https://conn.nodeloc.cc/oauth2/auth`
+  - Client ID: 你的应用ID
+  - Scope: `openid profile`
+  - Response Type: `code`
+</Note>
 
 ### 开发环境配置
 
-```
-// 开发环境配置
+```javascript
+// 环境配置
 const config = {
   development: {
     clientId: 'dev_client_id',
@@ -560,8 +735,9 @@ const config = {
 };
 
 const currentConfig = config[process.env.NODE_ENV || 'development'];
+const oauth2Client = new NodeLocOAuth2Client(
+  currentConfig.clientId,
+  currentConfig.clientSecret,
+  currentConfig.redirectUri
+);
 ```
-
----
-
-_最后更新: 2025年5月_
