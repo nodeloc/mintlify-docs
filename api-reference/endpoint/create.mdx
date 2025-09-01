@@ -1,4 +1,241 @@
 ---
-title: 'Create Plant'
-openapi: 'POST /plants'
+title: '创建应用'
+description: '创建新的OAuth2应用'
 ---
+
+# 创建应用
+
+创建新的OAuth2应用以获取Client ID和Client Secret。
+
+## 端点信息
+
+**POST** `/api/apps`
+
+## 请求参数
+
+<ParamField body="name" type="string" required>
+  应用名称，长度在1-100个字符之间
+</ParamField>
+
+<ParamField body="description" type="string">
+  应用描述，最大500个字符
+</ParamField>
+
+<ParamField body="redirect_uris" type="array" required>
+  重定向URI列表，至少需要一个有效的URI
+  <Expandable title="数组项">
+    <ParamField type="string">
+      重定向URI，必须是有效的URI格式
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="allow_groups" type="array">
+  允许的用户组列表
+  <Expandable title="数组项">
+    <ParamField type="string">
+      用户组名称，如 "developers", "trust_level_1" 等
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="deny_groups" type="array">
+  拒绝的用户组列表
+  <Expandable title="数组项">
+    <ParamField type="string">
+      用户组名称，如 "banned", "suspended" 等
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## 响应
+
+<ResponseField name="client_id" type="string">
+  生成的应用ID，用于OAuth2流程中的客户端标识
+</ResponseField>
+
+<ResponseField name="client_secret" type="string">
+  生成的客户端密钥，**只在创建时返回一次**
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  应用名称
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  应用描述
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl -X POST https://conn.nodeloc.cc/api/apps \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -d '{
+    "name": "My App",
+    "description": "My OAuth2 Application",
+    "redirect_uris": ["https://myapp.com/auth/callback"],
+    "allow_groups": ["developers"],
+    "deny_groups": ["banned"]
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://conn.nodeloc.cc/api/apps', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+  },
+  body: JSON.stringify({
+    name: 'My App',
+    description: 'My OAuth2 Application',
+    redirect_uris: ['https://myapp.com/auth/callback'],
+    allow_groups: ['developers'],
+    deny_groups: ['banned']
+  })
+});
+
+const app = await response.json();
+console.log('Client ID:', app.client_id);
+console.log('Client Secret:', app.client_secret); // 只显示一次！
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://conn.nodeloc.cc/api/apps',
+    headers={
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
+    },
+    json={
+        'name': 'My App',
+        'description': 'My OAuth2 Application',
+        'redirect_uris': ['https://myapp.com/auth/callback'],
+        'allow_groups': ['developers'],
+        'deny_groups': ['banned']
+    }
+)
+
+app = response.json()
+print(f"Client ID: {app['client_id']}")
+print(f"Client Secret: {app['client_secret']}")  # 只显示一次！
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 201 成功响应
+{
+  "client_id": "abcd1234567890ef",
+  "client_secret": "secret_xyz123_THIS_IS_SHOWN_ONLY_ONCE",
+  "name": "My App",
+  "description": "My OAuth2 Application"
+}
+```
+
+```json 400 请求参数错误
+{
+  "error": 400,
+  "message": "Invalid redirect_uri format"
+}
+```
+
+```json 401 未认证
+{
+  "error": 401,
+  "message": "Authentication required"
+}
+```
+
+</ResponseExample>
+
+## 重要提醒
+
+<Warning>
+**Client Secret只在创建时返回一次**
+
+Client Secret是敏感信息，只会在应用创建成功后返回一次。请务必妥善保存，如果丢失需要重新创建应用或联系管理员重置。
+</Warning>
+
+## 用户组说明
+
+### 信任等级组
+
+NodeLoc使用Discourse的信任等级系统：
+
+- `trust_level_0` - 新用户
+- `trust_level_1` - 基础用户  
+- `trust_level_2` - 会员
+- `trust_level_3` - 资深会员
+- `trust_level_4` - 领袖
+
+### 特殊组
+
+- `admins` - 管理员
+- `moderators` - 版主
+- `banned` - 被封禁用户
+- `suspended` - 被暂停用户
+
+### 自定义组
+
+- `developers` - 开发者组
+- 其他论坛自定义的用户组
+
+## 示例场景
+
+### 开发者专用应用
+
+```json
+{
+  "name": "Developer Tools",
+  "description": "Internal developer tools and APIs",
+  "redirect_uris": ["https://devtools.company.com/auth/callback"],
+  "allow_groups": ["developers", "admins"],
+  "deny_groups": ["banned", "suspended"]
+}
+```
+
+### 公开应用
+
+```json
+{
+  "name": "Community App",
+  "description": "Open to all community members",
+  "redirect_uris": [
+    "https://app.example.com/auth/callback",
+    "https://staging.app.example.com/auth/callback"
+  ],
+  "allow_groups": ["trust_level_0", "trust_level_1", "trust_level_2"],
+  "deny_groups": ["banned"]
+}
+```
+
+### 管理工具
+
+```json
+{
+  "name": "Admin Dashboard",
+  "description": "Administrative tools and analytics",
+  "redirect_uris": ["https://admin.company.com/oauth/callback"],
+  "allow_groups": ["admins", "moderators"],
+  "deny_groups": []
+}
+```
+
+## 下一步
+
+创建应用后，你可以：
+
+1. 使用获得的`client_id`和`client_secret`实现OAuth2授权流程
+2. 配置应用的重定向URI
+3. 测试OAuth2集成
+4. 部署到生产环境
+
+<Card title="开始授权流程" icon="arrow-right" href="/api-reference/endpoint/authorize">
+  了解如何使用获得的凭据开始OAuth2授权流程
+</Card>
