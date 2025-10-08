@@ -1,432 +1,327 @@
 ---
-title: "NodeLoc Payment Plugin API 对接文档"
-description: "详细介绍如何将你的网站与 NodeLoc Payment Plugin 集成，实现能量支付功能"
-version: "1.0.1"
-lastUpdated: "Wed Oct 08 2025 08:00:00 GMT+0800 (中国标准时间)"
+title: NodeLoc Payment 对接指南
+description: 完整的支付集成文档，助您快速接入 NodeLoc 支付系统
 ---
 
-import { Callout } from '@/components/Callout'
-import { CodeBlock } from '@/components/CodeBlock'
-import { Tabs, Tab } from '@/components/Tabs'
-import { Steps } from '@/components/Steps'
+## 快速开始
 
-# NodeLoc Payment Plugin API 对接文档
+### 对接流程
 
-本文档详细介绍如何将你的网站与 NodeLoc Payment Plugin 集成，实现能量支付功能。
+1. **创建支付应用** → 获取 Payment ID 和 Secret Key
+2. **用户下单** → 调用发起支付接口
+3. **跳转支付** → 用户在 NodeLoc 登录并支付
+4. **接收回调** → 浏览器跳转到你的回调地址
+5. **查询状态**（可选）→ 主动查询支付结果
 
-## 目录
+---
 
-- [概述](#概述)
-- [前置准备](#前置准备)
-- [认证机制](#认证机制)
-- [API 接口](#api-接口)
-- [集成流程](#集成流程)
-- [代码示例](#代码示例)
-- [错误处理](#错误处理)
-- [安全建议](#安全建议)
+## 创建支付应用
 
-## 概述
+### 访问管理页面
 
-NodeLoc Payment Plugin 提供了一个安全的支付接口，允许外部网站使用 NodeLoc 用户的能量进行支付。
-
-### 核心概念
-
-<dl>
-  <dt><strong>Payment Application（支付应用）</strong></dt>
-  <dd>你在 NodeLoc 上注册的应用，用于标识你的网站</dd>
-
-  <dt><strong>Payment ID</strong></dt>
-  <dd>应用的唯一标识符</dd>
-
-  <dt><strong>Token</strong></dt>
-  <dd>应用的密钥，用于生成签名</dd>
-
-  <dt><strong>Signature（签名）</strong></dt>
-  <dd>用于验证请求真实性的哈希值</dd>
-</dl>
-
-### 支付流程
-
-```mermaid
-graph LR
-    A[你的网站] --> B[创建支付请求]
-    B --> C[NodeLoc 支付页面]
-    C --> D[用户确认]
-    D --> E[扣除能量]
-    E --> F[回调通知]
-    F --> G[你的网站]
+```
+https://www.nodeloc.com/payment/applications
 ```
 
-<Callout>
-  💡 **提示**: 整个支付流程采用 HMAC-SHA256 签名机制，确保交易安全可靠。
-</Callout>
+### 填写应用信息
 
-## 前置准备
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| **应用名称** | 你的网站/商店名称 | "我的在线商店" |
+| **网站地址** | 你的网站主页 | `https://example.com` |
+| **回调地址** | 接收支付通知的URL | `https://example.com/payment/callback` |
+| **描述** | 应用说明（可选） | "在线商店支付集成" |
 
-<Steps>
-  ### 创建支付应用
+### 保存密钥
 
-  1. 访问 NodeLoc 站点的 `/payment/applications` 页面
-  2. 点击"新建支付应用"
-  3. 填写以下信息：
-     - **应用名称**: 你的网站名称
-     - **网站 URL**: 你的网站地址
-     - **回调 URL**: 接收支付结果的回调地址
-     - **描述**: 应用说明（可选）
-  4. 提交后会生成：
-     - **Payment ID**: 如 `pay_a1b2c3d4e5f6...`
-     - **Token**: 如 `tk_a1b2c3d4e5f6...`（仅显示一次，请务必保存）
-  5. 等待管理员审批，审批通过后即可使用
+创建成功后会显示：
 
-  ### 保存凭证
+- **Payment ID**: `pay_xxxxxxxxxxxxxxxxxx`
+- **Secret Key**: `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
 
-  将 Payment ID 和 Token 保存到你的服务器配置中，例如：
+<Warning>
+Secret Key 只显示一次，请立即保存！
+</Warning>
 
-  ```bash .env
-  # .env 文件
-  NODELOC_PAYMENT_ID=pay_a1b2c3d4e5f6...
-  NODELOC_TOKEN=tk_a1b2c3d4e5f6...
-  NODELOC_URL=https://www.nodeloc.com
-  ```
+---
 
-  <Callout type="warning">
-    ⚠️ **安全提醒**: Token 是敏感信息，切勿泄露或提交到版本控制系统
-  </Callout>
-</Steps>
+## 发起支付
 
-## 认证机制
+### API 接口
 
-所有支付请求都需要使用签名进行验证，确保请求来自授权的应用。
+```
+POST https://www.nodeloc.com/payment/pay/:payment_id/process
+```
 
-### 签名生成算法
+### 请求参数
 
-<Callout type="success">
-  🔒 **重要变更 (v1.0.1)**: 签名算法已从 SHA256 改为 **HMAC-SHA256**，提供更强的安全性。
-</Callout>
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `amount` | Integer | 是 | 支付金额（积分） |
+| `description` | String | 是 | 交易描述 |
+| `order_id` | String | 是 | 你的订单号（唯一标识） |
+| `signature` | String | 是 | HMAC-SHA256 签名 |
 
-签名生成步骤：
+### 签名算法
 
-1. 对请求参数按键名字母顺序排序
-2. 将参数拼接成 `key=value` 格式，用 `&` 连接
-3. 使用 Token Hash 作为密钥，对参数字符串进行 HMAC-SHA256 加密
-4. 得到的十六进制字符串即为签名
+1. **准备参数**: `amount`, `description`, `order_id`
+2. **按键名排序**: 字母顺序排列参数
+3. **拼接字符串**: 格式 `key1=value1&key2=value2&key3=value3`
+4. **生成签名**: `HMAC-SHA256(secret_key, param_string)`
 
-### Token Hash 生成
+**签名参数示例**：
+```
+amount=100&description=购买VIP会员&order_id=order_20251008_001
+```
 
-首次获得 Token 后，需要先计算其 SHA256 哈希值：
+### 响应数据
 
-<Tabs>
-  <Tab title="Tab">
-    ```javascript
-    const crypto = require('crypto');
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-    ```
-  </Tab>
-  <Tab title="Tab">
-    ```php
-    $tokenHash = hash('sha256', $token);
-    ```
-  </Tab>
-  <Tab title="Tab">
-    ```python
-    import hashlib
-    token_hash = hashlib.sha256(token.encode()).hexdigest()
-    ```
-  </Tab>
-</Tabs>
-
-<Callout>
-  **重要**: 保存 Token 和 Token Hash，后续签名使用 Token Hash。
-</Callout>
-
-### 签名示例
-
-假设请求参数为：
+成功时返回：
 
 ```json
 {
-  "amount": 100,
-  "description": "购买商品",
-  "order_id": "ORDER123",
-  "user_id": 5
-}
-```
-
-- Token: `tk_secret`
-- Token Hash: `9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08`
-
-生成签名步骤：
-
-```
-1. 排序: amount, description, order_id, user_id
-2. 拼接: amount=100&description=购买商品&order_id=ORDER123&user_id=5
-3. HMAC-SHA256: 使用 Token Hash 作为密钥加密参数字符串
-4. 结果: 得到签名的十六进制字符串
-```
-
-### 代码实现
-
-<Tabs>
-  <Tab title="Tab">
-    ```javascript
-    const crypto = require('crypto');
-    
-    function generateSignature(tokenHash, params) {
-      // 1. 按键名排序
-      const sortedKeys = Object.keys(params).sort();
-      
-      // 2. 拼接参数
-      const paramString = sortedKeys
-        .map(key => `${key}=${params[key]}`)
-        .join('&');
-      
-      // 3. HMAC-SHA256 加密
-      return crypto
-        .createHmac('sha256', tokenHash)
-        .update(paramString)
-        .digest('hex');
-    }
-    
-    // 使用示例
-    const token = 'tk_secret';
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
-    const params = {
-      amount: 100,
-      description: '购买商品',
-      order_id: 'ORDER123',
-      user_id: 5
-    };
-    
-    const signature = generateSignature(tokenHash, params);
-    ```
-  </Tab>
-  <Tab title="Tab">
-    ```php
-    function generateSignature($tokenHash, $params) {
-        // 按键名排序
-        ksort($params);
-        
-        // 拼接参数
-        $pairs = [];
-        foreach ($params as $key => $value) {
-            $pairs[] = $key . '=' . $value;
-        }
-        $paramString = implode('&', $pairs);
-        
-        // HMAC-SHA256 加密
-        return hash_hmac('sha256', $paramString, $tokenHash);
-    }
-    ```
-  </Tab>
-  <Tab title="Tab">
-    ```python
-    import hashlib
-    import hmac
-    
-    def generate_signature(token_hash, params):
-        # 按键名排序
-        sorted_params = sorted(params.items())
-        
-        # 拼接参数
-        param_string = '&'.join([f'{k}={v}' for k, v in sorted_params])
-        
-        # HMAC-SHA256 加密
-        return hmac.new(
-            token_hash.encode(),
-            param_string.encode(),
-            hashlib.sha256
-        ).hexdigest()
-    ```
-  </Tab>
-</Tabs>
-
-## API 接口
-
-### 1. 创建支付
-
-创建一个支付请求，返回支付页面 URL。
-
-<div className="api-endpoint">
-<span className="method post">POST</span> <code>/payment/pay/{payment_id}/process</code>
-</div>
-
-#### 请求参数
-
-| 参数            | 类型      | 必填 | 说明                       |
-| ------------- | ------- | --- | ------------------------ |
-| `amount`      | Integer | ✅  | 支付金额（能量数量），必须大于 0        |
-| `description` | String  | ✅  | 支付描述，最长 500 字符           |
-| `order_id`    | String  | ✅  | 你的系统订单号，用于关联订单，最长 100 字符 |
-| `user_id`     | Integer | ✅  | NodeLoc 用户 ID            |
-| `signature`   | String  | ✅  | 请求签名                     |
-
-#### 请求示例
-
-```bash 创建支付请求
-curl -X POST https://www.nodeloc.com/payment/pay/pay_a1b2c3d4/process \
-  -H "Content-Type: application/json" \
-  -d '{
-    "amount": 100,
-    "description": "购买VIP会员",
-    "order_id": "ORDER_20250108_001",
-    "user_id": 5,
-    "signature": "abc123..."
-  }'
-```
-
-#### 成功响应 (200 OK)
-
-```json
-{
-  "payment_url": "https://www.nodeloc.com/payment/pay/txn_a1b2c3d4",
-  "transaction_id": "txn_a1b2c3d4",
+  "payment_url": "https://www.nodeloc.com/payment/pay/txn_xxx",
+  "transaction_id": "txn_xxx",
   "status": "pending",
-  "amount": 100,
-  "user_id": 5
+  "amount": 100
 }
 ```
 
-#### 错误响应
+### 跳转支付
+
+将用户重定向到响应中的 `payment_url`，用户会：
+
+1. 自动跳转到登录页（如未登录）
+2. 登录后返回支付页面
+3. 确认订单并完成支付
+4. 支付成功后跳转到你的回调地址
+
+---
+
+## 处理回调
+
+### 回调方式
+
+<Warning>
+**重要**：这是浏览器 GET 跳转，不是服务器 POST 请求！
+</Warning>
+
+支付成功后，用户浏览器会跳转到你设置的回调地址，所有参数以查询字符串形式传递。
+
+### 回调参数（URL 查询参数）
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `transaction_id` | String | 交易ID |
+| `external_reference` | String | 你的订单号（即 order_id） |
+| `amount` | Integer | 支付金额（积分） |
+| `platform_fee` | Integer | 平台手续费（积分） |
+| `merchant_points` | Integer | 商家实际收到的积分 |
+| `status` | String | 交易状态（`completed`） |
+| `paid_at` | DateTime | 支付时间（ISO 8601） |
+| `signature` | String | 回调签名（用于验证） |
+
+### 回调 URL 示例
+
+```
+https://example.com/payment/callback?
+  transaction_id=txn_xxx&
+  external_reference=order_123&
+  amount=100&
+  platform_fee=5&
+  merchant_points=95&
+  status=completed&
+  paid_at=2025-10-08T12:00:00Z&
+  signature=abc123...
+```
+
+### 验证签名
+
+<Warning>
+**必须验证签名**，防止伪造请求！
+</Warning>
+
+验证步骤：
+
+1. **提取签名参数**: 从 URL 中获取 `signature`
+2. **提取其他参数**: 所有参数除了 `signature` 本身
+3. **按键名排序**: 字母顺序排列
+4. **拼接字符串**: 格式 `key1=value1&key2=value2...`
+5. **计算签名**: `HMAC-SHA256(secret_key, param_string)`
+6. **比对签名**: 计算出的签名与接收到的签名必须完全一致
+
+**签名参数示例**：
+```
+amount=100&external_reference=order_123&merchant_points=95&paid_at=2025-10-08T12:00:00Z&platform_fee=5&status=completed&transaction_id=txn_xxx
+```
+
+### 处理订单
+
+验证签名通过后：
+
+- ✅ **检查幂等性**: 确保订单未被重复处理
+- ✅ **验证金额**: 确认 `amount` 与订单金额一致
+- ✅ **更新订单状态**: 标记为已支付
+- ✅ **执行业务逻辑**: 发货、开通服务等
+- ✅ **显示确认页面**: 向用户展示支付成功信息
+
+---
+
+## 查询状态
+
+如果回调失败或需要主动确认支付状态，可以使用查询接口。
+
+### API 接口
+
+```
+POST https://www.nodeloc.com/payment/query/:payment_id
+```
+
+### 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `transaction_id` | String | 是 | 交易ID |
+| `signature` | String | 是 | HMAC-SHA256 签名 |
+
+### 签名算法
+
+与发起支付相同：
+
+1. 参数：`transaction_id`
+2. 拼接：`transaction_id=txn_xxx`
+3. 签名：`HMAC-SHA256(secret_key, param_string)`
+
+### 响应数据
 
 ```json
 {
-  "error": "Invalid signature",
-  "message": "签名验证失败"
-}
-```
-
-### 2. 查看支付详情
-
-获取支付交易的详细信息（可选，用于查询支付状态）。
-
-<div className="api-endpoint">
-<span className="method get">GET</span> <code>/payment/pay/{transaction_id}</code>
-</div>
-
-#### 请求示例
-
-```bash
-curl https://www.nodeloc.com/payment/pay/txn_a1b2c3d4
-```
-
-#### 成功响应 (200 OK)
-
-```json
-{
-  "transaction_id": "txn_a1b2c3d4",
-  "payment_id": "pay_a1b2c3d4",
+  "transaction_id": "txn_xxx",
+  "status": "completed",
   "amount": 100,
+  "platform_fee": 5,
+  "merchant_points": 95,
   "description": "购买VIP会员",
-  "order_id": "ORDER_20250108_001",
-  "status": "completed",
-  "user_id": 5,
-  "created_at": "2025-01-08T10:30:00Z",
-  "completed_at": "2025-01-08T10:32:00Z"
+  "external_reference": "order_123",
+  "created_at": "2025-10-08T12:00:00Z",
+  "updated_at": "2025-10-08T12:05:00Z",
+  "paid_at": "2025-10-08T12:05:00Z",
+  "expires_at": "2025-10-08T12:30:00Z",
+  "expired": false,
+  "error_message": null
 }
 ```
 
-### 3. 支付回调
+### 交易状态
 
-用户完成支付后，系统会向你的回调 URL 发送 POST 请求。
+| 状态 | 说明 |
+|------|------|
+| `pending` | 等待用户支付 |
+| `processing` | 支付处理中 |
+| `completed` | 支付成功 |
+| `failed` | 支付失败 |
+| `cancelled` | 已取消 |
+| `refunded` | 已退款 |
 
-<div className="api-endpoint">
-<span className="method post">POST</span> <code>你的回调 URL</code>
-</div>
+### 建议使用场景
 
-#### 回调参数
+- 定时任务检查待支付订单状态
+- 用户主动查询订单状态
+- 回调失败后的补救措施
 
-| 参数               | 类型      | 说明                                  |
-| ---------------- | ------- | ----------------------------------- |
-| `transaction_id` | String  | 交易ID                                |
-| `order_id`       | String  | 你的订单号                               |
-| `amount`         | Integer | 支付金额                                |
-| `status`         | String  | 支付状态: `completed`（成功）或 `failed`（失败） |
-| `user_id`        | Integer | 用户ID                                |
-| `payment_id`     | String  | 应用ID                                |
-| `signature`      | String  | 回调签名                                |
+---
 
-#### 回调示例
+## 安全建议
 
-```json
-{
-  "transaction_id": "txn_a1b2c3d4",
-  "order_id": "ORDER_20250108_001",
-  "amount": 100,
-  "status": "completed",
-  "user_id": 5,
-  "payment_id": "pay_a1b2c3d4",
-  "signature": "xyz789..."
-}
-```
+### 1. 保护密钥
+- ❌ 不要硬编码在代码中
+- ✅ 使用环境变量或密钥管理服务
 
-<Callout type="warning">
-  **验证回调签名**: 回调签名的生成方式与请求签名相同，你需要验证签名确保回调来自 NodeLoc。
-</Callout>
+### 2. 使用 HTTPS
+- ✅ 生产环境必须使用 HTTPS
+- ✅ 回调 URL 必须是 HTTPS 地址
 
-#### 你的响应
+### 3. 验证签名
+- ✅ 所有回调请求必须验证签名
+- ✅ 签名不匹配时拒绝请求
 
-成功接收回调后，返回 200 状态码：
+### 4. 防止重复处理
+- ✅ 检查订单状态，防止重复处理
+- ✅ 使用数据库事务确保原子性
 
-```json
-{
-  "success": true
-}
-```
+### 5. 验证金额
+- ✅ 验证回调金额与订单金额一致
+- ✅ 金额不匹配时记录日志并告警
 
-## 集成流程
+### 6. 日志记录
+- ✅ 记录所有支付相关操作
+- ✅ 记录所有回调请求（包括签名验证失败的）
 
-### 完整流程图
+---
 
-```mermaid
-sequenceDiagram
-    participant User as 用户
-    participant Your as 你的网站
-    participant NL as NodeLoc
-    
-    User->>Your: 1. 下单
-    Your->>Your: 2. 生成订单
-    Your->>NL: 3. 创建支付请求 (带签名)
-    NL-->>Your: 4. 返回 payment_url
-    Your->>User: 5. 重定向到支付页面
-    User->>NL: 6. 确认支付
-    NL->>NL: 7. 扣除能量
-    NL->>Your: 8. 回调通知 (带签名)
-    Your->>Your: 9. 验证签名
-    Your->>Your: 10. 更新订单
-    Your-->>NL: 11. 返回成功
-    Your->>User: 12. 提供服务
-```
+## 常见问题
 
-### 关键步骤说明
+<AccordionGroup>
+  <Accordion title="Q: 签名验证失败？">
+    检查以下几点：
+    1. 参数是否按键名字母顺序排序
+    2. 参数拼接格式是否为 `key=value&key=value`
+    3. Secret Key 是否正确
+    4. 验证时是否排除了 `signature` 参数本身
+    5. 字符编码是否一致（UTF-8）
+  </Accordion>
 
-<Steps>
-  ### 创建订单
+  <Accordion title="Q: 回调没有收到？">
+    可能原因：
+    1. 回调 URL 设置错误
+    2. 用户关闭了浏览器窗口
+    3. 网络问题导致跳转失败
 
-  在你的数据库中创建订单记录
+    **解决方案**：使用查询接口定期检查订单状态
+  </Accordion>
 
-  ### 生成签名
+  <Accordion title="Q: 如何测试？">
+    开发环境测试：
+    1. 使用 ngrok 等工具暴露本地服务器
+    2. 在 NodeLoc 创建测试应用
+    3. 设置回调 URL 为 ngrok 地址
+    4. 创建小金额订单测试
+  </Accordion>
 
-  使用订单信息和 Token 生成签名
+  <Accordion title="Q: 支持退款吗？">
+    目前不支持自动退款，需要联系管理员手动处理。
+  </Accordion>
 
-  ### 创建支付
+  <Accordion title="Q: 订单会过期吗？">
+    是的，默认 30 分钟未支付会自动过期。
+  </Accordion>
+</AccordionGroup>
 
-  调用 NodeLoc API 获取支付链接
+---
 
-  ### 重定向用户
+## API 参考
 
-  将用户重定向到支付页面
+### 发起支付
 
-  ### 处理回调
+- **URL**: `POST /payment/pay/:payment_id/process`
+- **认证**: 签名验证
+- **请求**: `amount`, `description`, `order_id`, `signature`
+- **响应**: `payment_url`, `transaction_id`, `status`, `amount`
 
-  验证回调签名并更新订单状态
-</Steps>
+### 查询状态
 
-## 代码示例
+- **URL**: `POST /payment/query/:payment_id`
+- **认证**: 签名验证
+- **请求**: `transaction_id`, `signature`
+- **响应**: 完整交易信息（见上文）
 
-### PHP 完整示例
+### 支付回调
 
-```php DiscoursePayment.php
-<?php
+- **方式**: 浏览器 GET 跳转
+- **URL**: 你设置的 `callback_url`
+- **认证**: 签名验证
+- **参数**: `transaction_id`, `external_reference`, `amount`, `platform_fee`, `merchant_points`, `status`, `paid_at`, `signature`
 
-class NodeLocPayment {
-```
+---
+
+**祝对接顺利！** 🚀
