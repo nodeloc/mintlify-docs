@@ -26,7 +26,8 @@
             "pages": [
               "common/lottery",
               "common/telegram",
-              "common/oauth2"
+              "common/oauth2",
+              "common/payment"
             ]
           },
           {
