@@ -1,5 +1,5 @@
 ---
-title: NodeLoc Payment 对接指南
+title: Payment
 description: 完整的支付集成文档，助您快速接入 NodeLoc 支付系统
 ---
 
@@ -67,7 +67,13 @@ POST https://www.nodeloc.com/payment/pay/:payment_id/process
 1. **准备参数**: `amount`, `description`, `order_id`
 2. **按键名排序**: 字母顺序排列参数
 3. **拼接字符串**: 格式 `key1=value1&key2=value2&key3=value3`
-4. **生成签名**: `HMAC-SHA256(secret_key, param_string)`
+4. **计算密钥**: `token_hash = SHA256(your_token)`  // 你的 token 是 tk_xxx 格式
+5. **生成签名**: `signature = HMAC-SHA256(token_hash, param_string)`
+
+**重要**: 
+- `your_token` 是申请时获得的 token（格式：`tk_xxx...`）
+- `token_hash` 是 token 的 SHA256 哈希（64位十六进制字符串）
+- **不要直接用 token 作为 HMAC 密钥！**
 
 **签名参数示例**：
 ```
