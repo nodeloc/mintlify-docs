@@ -1,6 +1,6 @@
 ---
-title: '创建应用'
-description: '创建新的OAuth2应用'
+title: "创建应用"
+description: "创建新的OAuth2应用"
 ---
 
 # 创建应用
@@ -23,6 +23,7 @@ description: '创建新的OAuth2应用'
 
 <ParamField body="redirect_uris" type="array" required>
   重定向URI列表，至少需要一个有效的URI
+
   <Expandable title="数组项">
     <ParamField type="string">
       重定向URI，必须是有效的URI格式
@@ -32,6 +33,7 @@ description: '创建新的OAuth2应用'
 
 <ParamField body="allow_groups" type="array">
   允许的用户组列表
+
   <Expandable title="数组项">
     <ParamField type="string">
       用户组名称，如 "developers", "trust_level_1" 等
@@ -41,6 +43,7 @@ description: '创建新的OAuth2应用'
 
 <ParamField body="deny_groups" type="array">
   拒绝的用户组列表
+
   <Expandable title="数组项">
     <ParamField type="string">
       用户组名称，如 "banned", "suspended" 等
@@ -81,6 +84,7 @@ curl -X POST https://conn.nodeloc.cc/api/apps \
   }'
 ```
 
+
 ```javascript JavaScript
 const response = await fetch('https://conn.nodeloc.cc/api/apps', {
   method: 'POST',
@@ -101,6 +105,7 @@ const app = await response.json();
 console.log('Client ID:', app.client_id);
 console.log('Client Secret:', app.client_secret); // 只显示一次！
 ```
+
 
 ```python Python
 import requests
@@ -138,12 +143,14 @@ print(f"Client Secret: {app['client_secret']}")  # 只显示一次！
 }
 ```
 
+
 ```json 400 请求参数错误
 {
   "error": 400,
   "message": "Invalid redirect_uri format"
 }
 ```
+
 
 ```json 401 未认证
 {
@@ -157,9 +164,9 @@ print(f"Client Secret: {app['client_secret']}")  # 只显示一次！
 ## 重要提醒
 
 <Warning>
-**Client Secret只在创建时返回一次**
+  **Client Secret只在创建时返回一次**
 
-Client Secret是敏感信息，只会在应用创建成功后返回一次。请务必妥善保存，如果丢失需要重新创建应用或联系管理员重置。
+  Client Secret是敏感信息，只会在应用创建成功后返回一次。请务必妥善保存，如果丢失需要重新创建应用或联系管理员重置。
 </Warning>
 
 ## 用户组说明
@@ -169,7 +176,7 @@ Client Secret是敏感信息，只会在应用创建成功后返回一次。请�
 NodeLoc使用Discourse的信任等级系统：
 
 - `trust_level_0` - 新用户
-- `trust_level_1` - 基础用户  
+- `trust_level_1` - 基础用户
 - `trust_level_2` - 会员
 - `trust_level_3` - 资深会员
 - `trust_level_4` - 领袖

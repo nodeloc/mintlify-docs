@@ -1,6 +1,6 @@
 ---
-title: '获取用户信息'
-description: '获取当前认证用户的详细信息'
+title: "获取用户信息"
+description: "获取当前认证用户的详细信息"
 ---
 
 # 获取用户信息
@@ -33,6 +33,7 @@ description: '获取当前认证用户的详细信息'
 
 <ResponseField name="groups" type="array">
   用户所属的组列表
+
   <Expandable title="数组项">
     <ResponseField type="string">
       组名称，如 "admins", "developers", "trust_level_1" 等
@@ -59,6 +60,7 @@ curl -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9..." \
   https://conn.nodeloc.cc/oauth2/userinfo
 ```
 
+
 ```javascript JavaScript
 const userResponse = await fetch('https://conn.nodeloc.cc/oauth2/userinfo', {
   headers: {
@@ -73,6 +75,7 @@ if (userResponse.ok) {
   console.error('获取用户信息失败:', userResponse.status);
 }
 ```
+
 
 ```python Python
 import requests
@@ -89,6 +92,7 @@ if response.status_code == 200:
 else:
     print(f"请求失败: {response.status_code}")
 ```
+
 
 ```php PHP
 <?php
@@ -131,12 +135,14 @@ if ($httpCode === 200) {
 }
 ```
 
+
 ```json 401 访问令牌无效
 {
   "error": "invalid_token",
   "error_description": "The access token provided is expired, revoked, malformed, or invalid for other reasons"
 }
 ```
+
 
 ```json 403 权限不足
 {
@@ -243,12 +249,12 @@ def current_user():
 
 ### 常见错误代码
 
-| HTTP状态码 | 错误代码 | 说明 | 解决方案 |
-|------------|----------|------|----------|
-| 401 | `invalid_token` | 访问令牌无效或过期 | 使用刷新令牌重新获取 |
-| 401 | `token_expired` | 访问令牌过期 | 刷新访问令牌 |
-| 403 | `insufficient_scope` | 权限范围不足 | 重新授权获取更多权限 |
-| 429 | `rate_limit_exceeded` | 请求过于频繁 | 稍后重试 |
+| HTTP状态码 | 错误代码                  | 说明        | 解决方案       |
+| ------- | --------------------- | --------- | ---------- |
+| 401     | `invalid_token`       | 访问令牌无效或过期 | 使用刷新令牌重新获取 |
+| 401     | `token_expired`       | 访问令牌过期    | 刷新访问令牌     |
+| 403     | `insufficient_scope`  | 权限范围不足    | 重新授权获取更多权限 |
+| 429     | `rate_limit_exceeded` | 请求过于频繁    | 稍后重试       |
 
 ### 错误处理最佳实践
 
@@ -290,12 +296,13 @@ async function getUserInfoWithRetry(accessToken, maxRetries = 3) {
 ## 缓存考虑
 
 <Tip>
-**用户信息缓存**
+  **用户信息缓存**
 
-用户信息相对稳定，可以进行适当缓存以减少API调用：
-- 缓存时间建议：5-15分钟
-- 当收到401错误时立即清除缓存
-- 用户主动登出时清除缓存
+  用户信息相对稳定，可以进行适当缓存以减少API调用：
+
+  - 缓存时间建议：5-15分钟
+  - 当收到401错误时立即清除缓存
+  - 用户主动登出时清除缓存
 </Tip>
 
 ```javascript
