@@ -22,7 +22,7 @@ description: 完整的第三方应用对接指南，支持 OAuth 2.0 和 OpenID 
 访问 NodeLoc 论坛并创建 OAuth 应用：
 
 ```
-https://www.nodeloc.com.com/oauth-provider/applications
+https://www.nodeloc.com/oauth-provider/applications
 ```
 
 记录以下信息：
@@ -33,7 +33,7 @@ https://www.nodeloc.com.com/oauth-provider/applications
 ### 2. 配置环境变量
 
 ```bash
-NodeLoc_URL=https://www.nodeloc.com.com
+NodeLoc_URL=https://www.nodeloc.com
 NodeLoc_CLIENT_ID=your-client-id
 NodeLoc_CLIENT_SECRET=your-client-secret
 NodeLoc_REDIRECT_URI=http://your-url.com/auth/callback
@@ -74,7 +74,7 @@ sequenceDiagram
 将用户重定向到以下 URL：
 
 ```
-https://www.nodeloc.com.com/oauth-provider/authorize?
+https://www.nodeloc.com/oauth-provider/authorize?
   client_id=YOUR_CLIENT_ID&
   redirect_uri=YOUR_REDIRECT_URI&
   response_type=code&
@@ -171,7 +171,7 @@ app.get('/callback', (req, res) => {
 使用授权码交换 Access Token：
 
 ```bash
-curl -X POST https://www.nodeloc.com.com/oauth-provider/token \
+curl -X POST https://www.nodeloc.com/oauth-provider/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=authorization_code" \
   -d "code=AUTHORIZATION_CODE" \
@@ -197,7 +197,7 @@ curl -X POST https://www.nodeloc.com.com/oauth-provider/token \
 使用 Access Token 获取用户信息：
 
 ```bash
-curl -X GET https://www.nodeloc.com.com/oauth-provider/userinfo \
+curl -X GET https://www.nodeloc.com/oauth-provider/userinfo \
   -H "Authorization: Bearer ACCESS_TOKEN"
 ```
 
@@ -489,7 +489,7 @@ app.listen(PORT, () => {
 创建 `.env` 文件：
 
 ```bash
-NodeLoc_URL=https://www.nodeloc.com.com
+NodeLoc_URL=https://www.nodeloc.com
 NodeLoc_CLIENT_ID=your-client-id
 NodeLoc_CLIENT_SECRET=your-client-secret
 NodeLoc_REDIRECT_URI=http://your-url.com/auth/callback
@@ -687,7 +687,7 @@ if __name__ == '__main__':
 #### 运行应用
 
 ```bash
-export NodeLoc_URL=https://www.nodeloc.com.com
+export NodeLoc_URL=https://www.nodeloc.com
 export NodeLoc_CLIENT_ID=your-client-id
 export NodeLoc_CLIENT_SECRET=your-client-secret
 
@@ -841,10 +841,10 @@ async function refreshAccessToken(refreshToken) {
 
 ```bash
 # 1. 在浏览器中访问授权 URL
-https://www.nodeloc.com.com/oauth-provider/authorize?client_id=YOUR_ID&redirect_uri=http://your-url.com/callback&response_type=code&state=test
+https://www.nodeloc.com/oauth-provider/authorize?client_id=YOUR_ID&redirect_uri=http://your-url.com/callback&response_type=code&state=test
 
 # 2. 授权后获取 code，然后交换 Token
-curl -X POST https://www.nodeloc.com.com/oauth-provider/token \
+curl -X POST https://www.nodeloc.com/oauth-provider/token \
   -d "grant_type=authorization_code" \
   -d "code=YOUR_CODE" \
   -d "redirect_uri=http://your-url.com/callback" \
@@ -852,7 +852,7 @@ curl -X POST https://www.nodeloc.com.com/oauth-provider/token \
   -d "client_secret=YOUR_SECRET"
 
 # 3. 使用 Token 获取用户信息
-curl -X GET https://www.nodeloc.com.com/oauth-provider/userinfo \
+curl -X GET https://www.nodeloc.com/oauth-provider/userinfo \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
@@ -883,7 +883,7 @@ scope=openid profile email
 | 已拒绝 (Rejected) | 应用未通过审核 | 联系管理员或修改权限重新申请 |
 
 **如何查看审核状态：**
-1. 访问 `https://www.nodeloc.com.com/oauth-provider/applications`
+1. 访问 `https://www.nodeloc.com/oauth-provider/applications`
 2. 在应用列表中查看"审核状态"列
 3. 待审核的应用会显示黄色警告图标
 
