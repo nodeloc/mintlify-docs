@@ -26,7 +26,6 @@
             "pages": [
               "common/lottery",
               "common/telegram",
-              "common/oauth2",
               "common/payment"
             ]
           },
@@ -48,15 +47,6 @@
             "group": "OIDC/Oauth2 API documentation",
             "pages": [
               "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
             ]
           }
         ]
