@@ -1,13 +1,16 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Nodeloc 知识库",
+  "theme": "almond",
+  "name": "Nodeloc  Docs",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
     "dark": "#15803D"
   },
-  "favicon": "/favicon.png",
+  "favicon": {
+    "light": "/images/nl-logo-green-square@180.png",
+    "dark": "/images/nl-logo-green-square@180.png"
+  },
   "navigation": {
     "tabs": [
       {
@@ -73,8 +76,9 @@
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/images/nodeloc-wordmark-duotone@1024.png",
+    "dark": "/images/nodeloc-wordmark-duotone@1024.png",
+    "href": "https://www.nodeloc.com"
   },
   "navbar": {
     "links": [
@@ -106,5 +110,8 @@
       "x": "https://x.com/nodeloc",
       "github": "https://github.com/nodeloc"
     }
+  },
+  "icons": {
+    "library": "lucide"
   }
 }
