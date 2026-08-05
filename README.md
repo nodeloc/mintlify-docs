@@ -24,8 +24,8 @@ Nodeloc 知识库致力于为社区用户提供 **准确、实用、易懂** 的
 
 感谢所有为知识库提供内容、修正与建议的朋友 ❤️
 
-<a href="https://github.com/nodeloc/docs/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=nodeloc/docs" />
+<a href="https://github.com/nodeloc/mintlify-docs/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=nodeloc/mintlify-docs" />
 </a>
 
 ---

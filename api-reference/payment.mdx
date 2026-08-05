@@ -1,5 +1,5 @@
 ---
-title: "Payment"
+title: "Payment 支付集成"
 description: "完整的支付集成文档，助您快速接入 NodeLoc 支付系统"
 ---
 
@@ -23,6 +23,10 @@ description: "完整的支付集成文档，助您快速接入 NodeLoc 支付系
 ```text
 https://www.nodeloc.com/payment/applications
 ```
+
+<Note>
+  创建支付应用需要白银会员 (TL1) 及以上，新应用需管理员审批后方可使用。
+</Note>
 
 ### 填写应用信息
 
@@ -241,9 +245,9 @@ POST https://www.nodeloc.com/payment/query/:payment_id
 
 ---
 
-将**当前支付应用申请人**的积分转账给指定的 NodeLoc 用户。常用于外部网站发放奖励、抽奖派发、佣金结算等场景。
-
 ## 用户转账
+
+将**当前支付应用申请人**的积分转账给指定的 NodeLoc 用户。常用于外部网站发放奖励、抽奖派发、佣金结算等场景。
 
 <Warning>
   **转出方固定为申请该 Payment 应用的用户**，无法转出其他人的积分。 请确保申请人账户中有足够的积分（含手续费）。
@@ -489,6 +493,3 @@ amount=100&order_id=transfer_20260425_001&to_user_id=123&to_username=alice
 ---
 
 **祝对接顺利！** 🚀
-
-```text
-```

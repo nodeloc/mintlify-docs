@@ -19,16 +19,24 @@ description: 完整的第三方应用对接指南，支持 OAuth 2.0 和 OpenID 
 
 ### 1. 创建 OAuth 应用
 
-访问 NodeLoc 论坛并创建 OAuth 应用：
+访问 NodeLoc 论坛并创建 OAuth 应用（需要黄金会员 TL2 及以上）：
 
 ```
 https://www.nodeloc.com/oauth-provider/applications
 ```
 
+<Frame>
+  <img src="/images/screenshots/oauth-apps.png" alt="OAuth 应用管理页面" />
+</Frame>
+
 记录以下信息：
 - **Client ID**: 应用的唯一标识符
-- **Client Secret**: 应用密钥（请妥善保管）
+- **Client Secret**: 应用密钥（只显示一次，请妥善保管）
 - **Redirect URI**: 授权后的回调地址
+
+<Note>
+  如果应用申请了 `email` 权限范围，创建后需要管理员审核才能使用。
+</Note>
 
 ### 2. 配置环境变量
 

@@ -14,42 +14,75 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "使用指南",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "新手入门",
             "pages": [
               "index",
               "quickstart",
-              "level"
+              "getting-started/account",
+              "getting-started/posting"
             ]
           },
           {
-            "group": "常用",
+            "group": "等级与能量",
             "pages": [
-              "common/lottery",
+              "level",
+              "energy/points",
+              "energy/checkin"
+            ]
+          },
+          {
+            "group": "互动玩法",
+            "pages": [
+              "features/lottery",
+              "features/red-envelope",
+              "features/reward",
+              "features/hidden-content",
+              "features/read-permission"
+            ]
+          },
+          {
+            "group": "社区功能",
+            "pages": [
+              "community/nodes",
+              "community/chat",
+              "community/projects",
+              "community/leaderboards"
+            ]
+          },
+          {
+            "group": "账号与通知",
+            "pages": [
               "common/telegram",
-              "common/payment"
+              "account/preferences"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "推广与商业",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "promotion/ads",
+              "promotion/merchants"
+            ]
+          },
+          {
+            "group": "帮助与共建",
+            "pages": [
+              "faq",
+              "create"
             ]
           }
         ]
       },
       {
-        "tab": "OIDC/Oauth2",
+        "tab": "开发者文档",
         "groups": [
           {
-            "group": "OIDC/Oauth2 API documentation",
+            "group": "API 对接",
             "pages": [
-              "api-reference/introduction"
+              "api-reference/introduction",
+              "api-reference/payment"
             ]
           }
         ]
@@ -58,23 +91,45 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://docs.nodeloc.com",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Community",
+          "anchor": "论坛",
           "href": "https://www.nodeloc.com",
-          "icon": "slack"
+          "icon": "comments"
         },
         {
-          "anchor": "Blog",
+          "anchor": "博客",
           "href": "https://blog.nodeloc.com",
           "icon": "newspaper"
+        },
+        {
+          "anchor": "GitHub",
+          "href": "https://github.com/nodeloc/mintlify-docs",
+          "icon": "github"
         }
       ]
     }
   },
+  "redirects": [
+    {
+      "source": "/common/lottery",
+      "destination": "/features/lottery"
+    },
+    {
+      "source": "/common/payment",
+      "destination": "/api-reference/payment"
+    },
+    {
+      "source": "/essentials/:slug*",
+      "destination": "/"
+    },
+    {
+      "source": "/ai-tools/:slug*",
+      "destination": "/"
+    },
+    {
+      "source": "/snippets/:slug*",
+      "destination": "/"
+    }
+  ],
   "logo": {
     "light": "/images/nodeloc-wordmark-duotone@1024.png",
     "dark": "/images/nodeloc-wordmark-duotone@1024.png",

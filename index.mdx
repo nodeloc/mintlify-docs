@@ -1,130 +1,174 @@
 ---
 title: "知识库"
-description: "用户指南和常见问题"
+description: "NodeLoc 用户指南和常见问题"
 ---
 
-## 快速上手 Nodeloc
+欢迎来到 NodeLoc 知识库。这里汇集了论坛各项功能的使用说明，帮助你快速上手并充分利用社区功能。
+
+## 新手入门
 
 <Card
-  title="注册与登录"
-  icon="user-plus"
-  href="/getting-started/account"
+  title="快速开始"
+  icon="rocket"
+  href="/quickstart"
   horizontal
 >
-  学习如何注册账号、登录论坛，以及设置个人资料。
+  三分钟了解注册、发帖、互动的基本流程。
 </Card>
-
-<Card
-  title="发帖与回复"
-  icon="comments"
-  href="/getting-started/posts"
-  horizontal
->
-  教你如何创建主题、回复帖子以及管理自己的内容。
-</Card>
-
-## 社区互动与功能
-
-了解论坛特性，提升你的使用体验。
 
 <Columns cols={2}>
   <Card
-    title="用户等级与积分"
+    title="注册与登录"
+    icon="user-plus"
+    href="/getting-started/account"
+  >
+    注册账号、多种登录方式、账号安全设置。
+  </Card>
+  <Card
+    title="发帖与回复"
+    icon="pen-to-square"
+    href="/getting-started/posting"
+  >
+    创建主题、回复帖子、编辑器技巧与阅读权限设置。
+  </Card>
+</Columns>
+
+## 等级与能量
+
+能量是 NodeLoc 的核心积分体系， trust level（信任等级）决定你可以使用哪些功能。
+
+<Columns cols={3}>
+  <Card
+    title="能量与信任等级"
     icon="trophy"
-    href="/community/levels"
+    href="/level"
   >
-    掌握积分规则、等级晋升与奖励机制。
+    能量获取规则、信任等级晋升条件与各级权限对照。
   </Card>
   <Card
-    title="私信与通知"
-    icon="envelope"
-    href="/community/messages"
+    title="能量系统"
+    icon="coins"
+    href="/energy/points"
   >
-    管理你的私信和通知，及时掌握社区动态。
+    能量余额、收支历史、转账规则与手续费。
   </Card>
   <Card
-    title="版块规则与指南"
-    icon="gavel"
-    href="/community/rules"
+    title="每日签到"
+    icon="calendar-check"
+    href="/energy/checkin"
   >
-    熟悉论坛规则和各版块指南，避免违规行为。
-  </Card>
-  <Card
-    title="常见问题"
-    icon="question-circle"
-    href="/community/faq"
-  >
-    汇总用户常遇到的问题及解决方法。
+    每天点一下，领取能量奖励。
   </Card>
 </Columns>
 
-## 进阶技巧与资源
-
-提升你的论坛体验，发现更多功能。
+## 互动玩法
 
 <Columns cols={2}>
   <Card
-    title="自定义设置"
-    icon="sliders"
-    href="/advanced/settings"
+    title="抽奖"
+    icon="gift"
+    href="/features/lottery"
   >
-    调整界面、通知偏好等，让论坛更符合你的习惯。
+    发起抽奖、购买奖券、开奖规则。
   </Card>
   <Card
-    title="使用插件与扩展"
-    icon="puzzle-piece"
-    href="/advanced/plugins"
+    title="红包"
+    icon="envelope-open-text"
+    href="/features/red-envelope"
   >
-    了解 Nodeloc 的插件和扩展功能。
+    在主题里发红包，回复即可领取。
   </Card>
   <Card
-    title="数据导出与备份"
-    icon="download"
-    href="/advanced/export"
+    title="打赏"
+    icon="bolt"
+    href="/features/reward"
   >
-    学会导出帖子、消息或个人数据。
+    用能量打赏优质帖子。
   </Card>
   <Card
-    title="社区支持"
-    icon="hands-helping"
-    href="https://www.nodeloc.com"
+    title="隐藏内容"
+    icon="eye-slash"
+    href="/features/hidden-content"
   >
-    浏览社区获取更多帮助和交流。
+    回复可见、登录可见、付费可见的用法。
+  </Card>
+  <Card
+    title="主题阅读权限"
+    icon="lock"
+    href="/features/read-permission"
+  >
+    按信任等级限制主题可见范围。
   </Card>
 </Columns>
 
-## 参与 Nodeloc Wiki 的贡献
+## 社区功能
 
-Nodeloc Wiki 欢迎社区用户参与内容完善和更新。您可以通过提交 **Pull Request (PR)** 的方式来提供修改、补充或纠正信息，但请务必遵守以下规则：
+<Columns cols={2}>
+  <Card
+    title="节点"
+    icon="users"
+    href="/community/nodes"
+  >
+    加入感兴趣的节点，或创建自己的子社区。
+  </Card>
+  <Card
+    title="聊天频道"
+    icon="message"
+    href="/community/chat"
+  >
+    实时聊天，加入吹水群等频道。
+  </Card>
+  <Card
+    title="公益项目"
+    icon="heart"
+    href="/community/projects"
+  >
+    展示和发现社区成员的优质项目。
+  </Card>
+  <Card
+    title="排行榜"
+    icon="ranking-star"
+    href="/community/leaderboards"
+  >
+    活跃榜与财富榜的排名规则。
+  </Card>
+</Columns>
 
-### 提交 PR 的要求
+## 推广与开发者
 
-1. **明确修改目的**  
-   - 在 PR 标题和描述中清晰说明修改的原因。  
-   - 示例：
-     - “修正论坛发帖操作步骤错误”  
-     - “补充积分获取规则说明”  
-     - “更新常见问题中已过期的链接”
+<Columns cols={3}>
+  <Card
+    title="广告投放"
+    icon="rectangle-ad"
+    href="/promotion/ads"
+  >
+    自助购买侧边栏与信息流广告，即买即开。
+  </Card>
+  <Card
+    title="认证商家"
+    icon="certificate"
+    href="/promotion/merchants"
+  >
+    商家认证权益与合作伙伴展示。
+  </Card>
+  <Card
+    title="开发者文档"
+    icon="code"
+    href="/api-reference/introduction"
+  >
+    OAuth 登录对接与支付系统集成。
+  </Card>
+</Columns>
 
-2. **遵守内容规范**  
-   - 避免发布广告、敏感信息或不相关内容。  
-   - 保持语言简明、准确、尊重社区文化。  
-   - 尽量提供引用或来源，以便验证信息。
+## 参与共建
 
-3. **分支和提交规范**  
-   - 在本地创建新分支进行修改，避免直接在 main 分支修改。  
-   - 提交时尽量拆分为小步提交，每个提交只处理一类修改。
+Nodeloc Wiki 欢迎社区用户参与内容完善和更新。你可以通过提交 **Pull Request** 来修正错误、补充内容。
 
-4. **审查流程**  
-   - 所有 PR 都会由管理员或维护者审核。  
-   - 通过审核后，修改才会合并到主分支并发布。
-
-### 参考示例
-
-```text
-PR 标题：修正“私信通知设置”步骤
-PR 描述：
-- 修复原文步骤遗漏“保存设置”操作
-- 补充通知偏好截图示例
-- 原因：新用户反馈按照原文操作无法生效
-```
+<Card
+  title="共建知识库"
+  icon="code-pull-request"
+  href="/create"
+  horizontal
+>
+  了解如何为知识库贡献内容，查看贡献者名单。
+</Card>
