@@ -7,10 +7,7 @@
     "light": "#07C983",
     "dark": "#15803D"
   },
-  "favicon": {
-    "light": "/images/nl-logo-green-square@180.png",
-    "dark": "/images/nl-logo-green-square@180.png"
-  },
+  "favicon": "/images/favicon.png",
   "navigation": {
     "tabs": [
       {
