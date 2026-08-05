@@ -87,26 +87,7 @@
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "论坛",
-          "href": "https://www.nodeloc.com",
-          "icon": "comments"
-        },
-        {
-          "anchor": "博客",
-          "href": "https://blog.nodeloc.com",
-          "icon": "newspaper"
-        },
-        {
-          "anchor": "GitHub",
-          "href": "https://github.com/nodeloc/mintlify-docs",
-          "icon": "github"
-        }
-      ]
-    }
+    ]
   },
   "redirects": [
     {
