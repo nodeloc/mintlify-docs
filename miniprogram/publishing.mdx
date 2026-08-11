@@ -1,0 +1,66 @@
+---
+title: "审核与发布"
+description: "提交审核的流程、审核员能看到什么、投放进帖子、配额限制与常见错误排查"
+---
+
+## 提交审核
+
+```bash
+nodeloc-apps upload --note "说清这版改了什么"
+```
+
+- 一个小程序同时**只能有一个待审版本**。
+- 审核员看到的是代码 diff、`readme.md`、你申请的权限，以及**超出当前已授权范围的部分（高亮）**。
+- **批准和授权是两件事**：审核员可以放行代码而不扩大权限。所以只申请真正需要的 scope——多要会让审核变慢。
+- 驳回一定附理由，你会收到通知。
+
+## 投放进帖子
+
+审核通过后，打开小程序详情页 `/apps/<slug>`，贴上你自己帖子的链接（或帖子编号），一键完成——嵌入标签会自动写进帖子，不用手工复制。
+
+<Note>
+`placement` 为 `many` 的小程序，任何成员都可以把它放进自己的帖子；`single` 只有作者和 staff 能投放。
+</Note>
+
+**升级到最新已批准版本**的方式：在原帖上再投放一次。
+
+## 配额与限制
+
+|  | 上限 |
+|---|---|
+| 打包后的代码 | 512 KB |
+| `readme.md` | 64 KB |
+| blocks 树 | 500 个节点 / 32 层嵌套 / 256 KB |
+| 单次调用耗时 | 站点配置，默认 3 秒 |
+
+## 常见问题
+
+<AccordionGroup>
+  <Accordion title="这个 app 已经有一个待审版本">
+    等审核结果，或让审核员先驳回。
+  </Accordion>
+  <Accordion title="沙箱里 fetch 失败">
+    沙箱没有网络，这是设计。需要外部数据的小程序现在做不了。
+  </Accordion>
+  <Accordion title="Not signed in. Run nodeloc-apps login first.">
+    没登录，或换了机器。跑一次 `nodeloc-apps login`。
+  </Accordion>
+  <Accordion title="E_SCOPE_DENIED">
+    你返回的某个 effect 需要的 scope 没被授予。用 `nodeloc-apps logs` 看是哪次调用，然后在 `app.json` 的 `scopes` 里申请并重新提交审核。
+  </Accordion>
+  <Accordion title="E_INVALID_BLOCKS">
+    组件树里有未知的类型或属性，或者超了 500 节点 / 32 层 / 256 KB 上限。
+  </Accordion>
+  <Accordion title="E_APP_TIMEOUT / E_APP_OUT_OF_MEMORY">
+    沙箱掐掉了这次调用。handler 要算得快、占得少。
+  </Accordion>
+  <Accordion title="webview 的 window.community 是 undefined">
+    小程序没有被授予 `webview` 权限，或站点没有开启 webview 支持。
+  </Accordion>
+  <Accordion title="客户端报 X is not defined">
+    页面 JS 是源码注入、不是闭包，模块级常量要一并注入。见[编写 handler](/miniprogram/handlers)。
+  </Accordion>
+  <Accordion title="小程序只能投放到一处">
+    你的 `placement` 是 `single`。确实需要多处就改成 `many`，但先想清楚共享区会被劈开。
+  </Accordion>
+</AccordionGroup>

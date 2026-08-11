@@ -1,0 +1,67 @@
+---
+title: "小程序概览"
+description: "NodeLoc 站内小程序：跑在帖子里的沙箱应用。了解架构、安全模型、两种界面形态与开发资格申请"
+---
+
+站内小程序（App）是运行在 NodeLoc 帖子里的互动应用——可以是小游戏、小工具，也可以是机器人辅助管理工具。它们在服务端沙箱中执行，只能使用审核批准的权限。
+
+<Frame>
+  <img src="/images/screenshots/miniprogram-topic.png" alt="运行在帖子里的贪吃蛇小程序与排行榜" />
+</Frame>
+
+## 这是什么
+
+一个小程序是**一个导出若干 handler 的 JS 模块**。handler 跑在服务端的沙箱里——没有网络、没有磁盘、没有作者账号、没有 `window`。它能读到的一切都从 `api` 来，它想改的一切都作为 `effects` 声明出去，由站点逐条校验后在一个事务里提交。
+
+这条约束不是限制，而是这套东西能存在的原因：**页面说什么都不算数**，所以分数、积分、排行榜才可信。
+
+|  | 跑在哪 | 谁可信 |
+|---|---|---|
+| handler（`render` / `onAction` / `onMessage` …） | 服务端沙箱 | 可信，唯一能写数据的地方 |
+| webview 页面（小程序自己的 HTML/JS） | 用户浏览器 | **不可信**，只能提交待验证的材料 |
+
+## 小程序目录
+
+所有已发布的小程序都在 [www.nodeloc.com/apps](https://www.nodeloc.com/apps)：
+
+<Frame>
+  <img src="/images/screenshots/miniprogram-directory.png" alt="小程序目录页" />
+</Frame>
+
+## 权限透明
+
+每个小程序的详情页都列出它获批的全部权限，用户在点开之前就能看到它能做什么：
+
+<Frame>
+  <img src="/images/screenshots/miniprogram-detail.png" alt="小程序详情页展示权限清单" />
+</Frame>
+
+小程序在沙箱中运行，无法访问用户账号，只能做权限清单里列出的事。
+
+## 两种界面形态
+
+### Blocks（默认）
+
+handler 返回组件树，由站点原生渲染。写不了 HTML，所以不可能有 XSS。适合投票、报名、计数器、表单类工具。组件清单见 [Blocks 组件](/miniprogram/blocks)。
+
+### Webview（需管理员单独批准）
+
+小程序自己画界面（HTML + CSS + JS），有真正的客户端循环。代价是**页面里的分数不可信**——要上排行榜就得让服务端能验算，见[编写 handler](/miniprogram/handlers)。
+
+<Note>
+webview 需要站点开启该能力后，由管理员为**每个小程序单独**授予。申请时在 `app.json` 里声明 `"surface": "webview"`。
+</Note>
+
+## 数据模型
+
+- **个人数据区**：每个成员在每个安装下有自己独立的 KV 空间。
+- **共享区**：同一安装下所有人共享（排行榜、世界状态），**只有 handler 能写入**——页面永远够不到它。
+- **安装即隔离**：一个安装一份共享区。有全站排行榜的小程序投放方式必须是 `single`，见 [app.json 与 readme](/miniprogram/manifest)。
+
+## 成为开发者
+
+小程序目前处于测试阶段，开发权限按用户组开放。想参与开发请联系管理员开通，获得权限后即可访问作者中心 [www.nodeloc.com/apps/authoring](https://www.nodeloc.com/apps/authoring)。
+
+<Card title="快速开始" icon="rocket" href="/miniprogram/quickstart">
+  拿到权限后，用 CLI 十分钟跑通第一个小程序
+</Card>

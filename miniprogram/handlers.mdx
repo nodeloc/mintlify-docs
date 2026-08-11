@@ -1,0 +1,136 @@
+---
+title: "编写 handler"
+description: "handler 签名、ctx 上下文字段、render/onAction 与 webview/onMessage 写法、后台 handler、api 读取与 effects 写入"
+---
+
+所有 handler 的签名都是 `(ctx, api)`，都可以是 async。每个 handler 返回 `{ blocks, state, effects }` 三件套：
+
+- `blocks`：组件树；`null` 表示界面不用变
+- `state`：随下次调用回传的本地状态
+- `effects`：要写数据、发通知等操作，声明出来由站点逐条校验后在一个事务里提交
+
+## ctx：上下文
+
+```json
+{
+  "install_id": 12,
+  "version": 3,
+  "locale": "zh_CN",
+  "config": {},
+  "topic_id": 481,
+  "post_id": 1902,
+  "category_id": 5,
+  "user": { "id": 7, "username": "ada", "avatar_url": "..." },
+  "state": {}
+}
+```
+
+| 字段 | 说明 |
+|---|---|
+| `install_id` / `version` | 当前安装与版本号 |
+| `locale` | 当前用户的语言 |
+| `config` | 安装时的配置 |
+| `topic_id` / `post_id` / `category_id` | 小程序所在的帖子位置 |
+| `user` | 当前用户；匿名访问时为 `null` |
+| `state` | 上一次 handler 返回的 state |
+| `action_id` / `inputs` | 仅 `onAction`：被点按钮的 action 与表单输入 |
+| `method` / `params` | 仅 `onMessage`：页面调用的方法与参数 |
+
+这个列表就是隐私边界——它有意很窄，因为它对所有小程序作者可见。
+
+## Blocks：render 与 onAction
+
+blocks 小程序返回组件树，由站点原生渲染：
+
+```js
+export async function render(ctx, api) {
+  const count = (await api.kv.get("count")) ?? 0;
+  return { blocks: view(count), state: { count }, effects: [] };
+}
+
+export async function onAction(ctx, api) {
+  if (ctx.action_id !== "bump") {
+    return { blocks: null, state: ctx.state, effects: [] };
+  }
+  const count = (ctx.state?.count ?? 0) + 1;
+  return {
+    blocks: view(count),
+    state: { count },
+    effects: [{ type: "kv.set", key: "count", value: count }],
+  };
+}
+
+function view(count) {
+  return {
+    type: "vstack", gap: "small", children: [
+      { type: "text", value: `点了 ${count} 次`, weight: "bold" },
+      { type: "button", label: "再点一次", action: "bump", variant: "primary" },
+    ],
+  };
+}
+```
+
+## Webview：webview 与 onMessage
+
+webview 小程序自己画界面（HTML + CSS + JS），有真正的客户端循环：
+
+```js
+export async function webview(ctx, api) {
+  return { html: "...", css: "...", js: "..." };
+}
+
+export async function onMessage(ctx, api) {
+  // 页面通过 window.community.call(method, params) 到达这里
+  if (ctx.method !== "submit") {
+    return { blocks: null, state: null, effects: [] };
+  }
+  // 校验、算分、写共享区
+}
+```
+
+### 让分数可信：种子回放
+
+页面里的分数不可信。要上榜，就得让服务端能**验算**：服务端发一个种子，页面回传走法序列，`onMessage` 用同一份模拟逻辑重放，算出真实分数。作弊者要上榜就得真把游戏玩好——站内的贪吃蛇小程序就是这样：分数由服务端重放走法算出。
+
+<Warning>
+页面里的 JS 是以**源码字符串**注入的，不是闭包。它引用的任何模块级常量都必须一并写进注入的前言里，否则运行时报 `X is not defined`。
+</Warning>
+
+## 后台 handler
+
+| handler | 触发时机 |
+|---|---|
+| `onTrigger(ctx, api)` | `triggers` 里声明的站点事件（`post_created`、`topic_created`、`post_liked`） |
+| `onSchedule(ctx, api)` | `schedule.add` 登记的定时任务 |
+
+两者都以小程序自己的机器人账号运行，**读不到任何成员的私有数据**。
+
+## 权限与数据
+
+读（通过 `api`，都要 `await`；数据在调用前已由平台预取，沙箱里不会真的去查库）：
+
+| 调用 | 内容 | 需要 scope |
+|---|---|---|
+| `api.kv.get(key)` / `api.kv.list()` | 当前成员在本安装下的数据 | `kv` |
+| `api.kv.listPublic()` | 共享区 | `kv.shared` |
+| `api.points.balance()` | 积分余额 | `points` |
+
+写（返回 `effects`，逐条校验后在一个事务里提交）：
+
+| effect | 需要 scope |
+|---|---|
+| `kv.set` / `kv.delete` | `kv` |
+| `kv.shared.set` / `kv.shared.delete` | `kv.shared` |
+| `ui.toast` / `ui.navigate` | `ui` |
+| `points.award` | `points` |
+| `rt.publish` | `realtime` |
+| `schedule.add` / `schedule.cancel` | `schedule` |
+
+两条要记住的：
+
+- **共享区只有 handler 写得进去。** 成员的 `kv.set` 永远只落到自己的命名空间，排行榜因此可信。
+- **广播只是信号。** 收到 `rt.publish` 的客户端会重新走一次带权限校验的渲染，广播内容本身从不被当作状态。
+
+<Note>
+`context` 是隐式授予的，不用申请。`post.read` / `post.write` / `notify` 已登记但**尚未接通**，现在申请不到。
+</Note>

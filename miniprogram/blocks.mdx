@@ -1,0 +1,63 @@
+---
+title: "Blocks 组件"
+description: "blocks 小程序可用的全部组件、属性与取值范围"
+---
+
+blocks 小程序的界面由组件树构成，站点原生渲染。你写不了 HTML，所以也不可能有 XSS。
+
+## 组件清单
+
+| 组件 | 属性 |
+|---|---|
+| `vstack` `hstack` | `gap` `align` `padding` + `children` |
+| `zstack` | `align` + `children` |
+| `text` | `value` `size` `weight` `align` |
+| `button` | `label` `icon` `variant` `action` `disabled` |
+| `image` | `url` `width` `height` `fit` `alt` |
+| `icon` | `name` `size` |
+| `spacer` | `size` |
+| `divider` | — |
+| `progress` | `value` `max` |
+| `input` | `name` `placeholder` `value` |
+| `select` | `name` `value` `options` |
+
+## 取值范围
+
+| 属性 | 可选值 |
+|---|---|
+| `size` / `gap` / `padding` | `xs` `small` `medium` `large` `xl` |
+| `align` | `start` `center` `end` `stretch` |
+| `weight` | `regular` `medium` `bold` |
+| `variant` | `primary` `secondary` `danger` `flat` |
+| `fit` | `contain` `cover` `fill` |
+
+<Warning>
+未知的组件类型和未知的属性会被**拒绝**，不是被忽略——你以为渲染了一个按钮却什么都没出现，是应该看见的 bug，服务端会以 `E_INVALID_BLOCKS` 拒绝这次调用。
+</Warning>
+
+组件树上限：**500 个节点 / 32 层嵌套 / 256 KB**。
+
+## 示例
+
+```js
+{
+  type: "vstack",
+  gap: "small",
+  padding: "medium",
+  children: [
+    { type: "text", value: "全场最高分", weight: "bold", size: "large" },
+    { type: "divider" },
+    { type: "progress", value: 40, max: 100 },
+    {
+      type: "hstack",
+      gap: "small",
+      children: [
+        { type: "button", label: "加注", action: "raise", variant: "primary" },
+        { type: "button", label: "弃牌", action: "fold", variant: "flat" },
+      ],
+    },
+  ],
+}
+```
+
+按钮的 `action` 会作为 `ctx.action_id` 传进 `onAction`；`input` 和 `select` 的值会收进 `ctx.inputs`。

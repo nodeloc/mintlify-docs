@@ -81,6 +81,17 @@
               "api-reference/introduction",
               "api-reference/payment"
             ]
+          },
+          {
+            "group": "小程序开发",
+            "pages": [
+              "miniprogram/introduction",
+              "miniprogram/quickstart",
+              "miniprogram/manifest",
+              "miniprogram/handlers",
+              "miniprogram/blocks",
+              "miniprogram/publishing"
+            ]
           }
         ]
       }

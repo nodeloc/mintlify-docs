@@ -1,0 +1,69 @@
+---
+title: "app.json 与 readme"
+description: "小程序清单文件的字段说明、readme.md 展示规则与 placement 投放方式的选择"
+---
+
+## app.json
+
+项目根目录的 `app.json` 是平台唯一读取的配置文件：
+
+```json
+{
+  "slug": "my-game",
+  "name": "My game",
+  "entry": "src/main.js",
+  "scopes": ["kv"],
+  "surface": "blocks",
+  "placement": "single",
+  "triggers": []
+}
+```
+
+| 字段 | 必填 | 说明 |
+|---|---|---|
+| `slug` | 是 | 小写字母、数字、短横线，全站唯一，出现在 URL 里 |
+| `name` | 是 | 目录里显示的名字 |
+| `entry` | 是 | 打包入口文件 |
+| `scopes` | 否 | 申请的权限，见[权限与数据](/miniprogram/handlers#权限与数据) |
+| `surface` | 否 | `blocks`（默认）或 `webview`（需管理员单独授予） |
+| `placement` | 否 | `single`（默认）或 `many`，见下文 |
+| `triggers` | 否 | 订阅的站点事件：`post_created`、`topic_created`、`post_liked` |
+
+平台只读取上面这些字段，其余内容不会被上传。
+
+## placement：投放方式
+
+| 取值 | 含义 | 谁能投放 | 适合 |
+|---|---|---|---|
+| `single` | 全站只应存在一处 | 只有作者和 staff | 全站排行榜、共享世界、赛季积分 |
+| `many` | 每处一份才合理 | 任何人放进自己的帖子 | 投票、报名、倒计时、骰子、换算器 |
+
+<Warning>
+**每个安装有各自独立的共享区。** 有全站排行榜的小程序必须是 `single`——投放到两处就等于把榜劈成两半。
+</Warning>
+
+## readme.md
+
+项目根目录的 `readme.md` 随代码一起上传，渲染成 Markdown 显示在小程序详情页（`/apps/<slug>`）。这是别人决定要不要点开你的小程序之前唯一会读的东西——`app.json` 里的 `name` 只有一行，讲不清楚。
+
+写法就是普通 Markdown：标题、列表、粗体、链接、代码块都支持，和发帖用的是同一套渲染器：
+
+```markdown
+# My game
+
+一句话说清这是什么。
+
+## 怎么玩
+
+1. 点「开始」
+2. ...
+
+## 计分
+```
+
+需要注意：
+
+- **readme 跟着版本走，不跟着小程序走。** 上传哪一版，页面就显示哪一版的 readme；审核员看到的也是这一份。改 readme 要重新提交版本——写着「骰子工具」通过审核的小程序，不能过几天自己改成别的说明。
+- 没有 `readme.md` 也能发布，页面上不显示这一节。
+- 上限 **64 KB**。
+- 不用 CLI 也行：作者中心（`/apps/authoring/<slug>`）的提交表单里有同一个字段，会自动带上你上一版写的内容。

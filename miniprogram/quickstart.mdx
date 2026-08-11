@@ -1,0 +1,104 @@
+---
+title: "快速开始"
+description: "安装 nodeloc-apps CLI，登录、初始化项目、playtest 热重载、提交审核的完整流程"
+---
+
+发布小程序有两条路线：**网页发布**（不装任何东西，适合小改动和第一次试水）和 **CLI**（本地写代码、热重载、看日志，推荐）。
+
+## 路线 A：网页发布
+
+<Steps>
+  <Step title="打开作者中心">
+    访问 [www.nodeloc.com/apps/authoring](https://www.nodeloc.com/apps/authoring)。
+  </Step>
+  <Step title="新建小程序">
+    点击「新建 app」，填写名字和 slug（小写字母、数字、短横线）。
+  </Step>
+  <Step title="粘贴代码">
+    把 handler 代码粘进编辑框，勾选需要的权限。
+  </Step>
+  <Step title="提交审核">
+    等待管理员审核。通过后去详情页把小程序投放进帖子，见[审核与发布](/miniprogram/publishing)。
+  </Step>
+</Steps>
+
+## 路线 B：CLI（推荐）
+
+### 安装
+
+需要 **Node.js 22 或更高**。CLI 尚未发布到 npm registry，从源码安装：
+
+```bash
+git clone https://github.com/nodeloc/nodeloc-apps-cli.git
+cd nodeloc-apps-cli
+npm install -g .
+
+nodeloc-apps --help
+```
+
+### 登录
+
+```bash
+nodeloc-apps login --site https://www.nodeloc.com
+```
+
+终端会打印一个校验码和一个链接。在浏览器里打开链接，**核对页面上的码和终端里的一致**（不一致就直接关掉——那说明这个批准请求不是你发起的），点「批准」，终端自动拿到凭据。
+
+凭据存在 `~/.config/nodeloc-apps/credentials.json`，仅本人可读。这把 key 只能发布你自己的小程序，站上别的事一件都干不了。再次 `login` 会让上一把立即失效。
+
+```bash
+nodeloc-apps whoami    # 查看当前登录身份
+nodeloc-apps logout    # 删除本机凭据
+```
+
+<Tip>
+**CI 或没有浏览器的机器**：在作者页点「生成 key」，改用环境变量（优先级高于 `login` 存下的凭据）：
+
+```bash
+export NODELOC_APPS_SITE=https://www.nodeloc.com
+export NODELOC_APPS_API_KEY=...
+export NODELOC_APPS_API_USERNAME=你的用户名
+```
+</Tip>
+
+### 初始化项目
+
+```bash
+nodeloc-apps init my-game --template counter   # counter | race
+cd my-game
+```
+
+```
+my-game/
+  app.json        # 平台读取的配置
+  readme.md       # 详情页展示的介绍，可选
+  src/main.js     # 入口，模板已经能跑
+```
+
+| 模板 | 内容 |
+|---|---|
+| `counter` | 最小 blocks 示例：一个按钮、一个计数器 |
+| `race` | 多人 blocks 示例：谁先按下谁得分，演示「客户端只说『我按了』，输赢由 handler 裁决」的可信模式 |
+
+### 开发循环
+
+```bash
+nodeloc-apps dev        # 打包 + 静态检查，不上传
+nodeloc-apps playtest   # 推到只有你能看见的私有安装，改文件自动重推
+nodeloc-apps upload --note "加了排行榜"   # 提交审核
+nodeloc-apps logs --limit 50              # 查看运行日志
+```
+
+- `dev` 会把相对 import 内联成单个模块，并提前拦掉服务端一定会拒的写法（缺 `render` 导出、`eval`、`node:` 内建模块、浏览器全局、`fetch`）。
+- `playtest` 的安装**只有你自己看得见**，不需要审核，可以随便试。它监听 `src/` 下的 `.js` 改动，存盘即重推，页面自动刷新。
+- `logs` 输出每次调用的 handler、结果、耗时和错误码：
+
+```text
+14:32:07  render    ok           12ms
+14:32:11  onAction  ok            8ms
+14:32:19  onAction  error        31ms  E_SCOPE_DENIED
+```
+
+<Card title="下一步：配置 app.json" icon="file-code" href="/miniprogram/manifest">
+  了解平台读取的全部字段
+</Card>
