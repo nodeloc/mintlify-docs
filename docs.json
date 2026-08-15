@@ -46,6 +46,7 @@
               "community/nodes",
               "community/chat",
               "community/projects",
+              "community/miniprogram",
               "community/leaderboards"
             ]
           },
