@@ -123,13 +123,13 @@
   "logo": {
     "light": "/images/nodeloc-wordmark-duotone@1024.png",
     "dark": "/images/nodeloc-wordmark-duotone@1024.png",
-    "href": "https://www.nodeloc.com"
+    "href": "/"
   },
   "navbar": {
     "links": [
       {
         "label": "Support",
-        "href": "mailto:james@nodeloc.com"
+        "href": "https://www.nodeloc.com/n/suggestion"
       }
     ],
     "primary": {
