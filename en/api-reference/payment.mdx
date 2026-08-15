@@ -1,0 +1,495 @@
+---
+title: "Payment Integration"
+description: "Complete payment integration documentation to help you quickly integrate with the NodeLoc payment system"
+---
+
+## Quick start
+
+### Integration flow
+
+1. **Create a payment app** → get a Payment ID and Secret Key
+2. **User places an order** → call the initiate payment API
+3. **Redirect to payment** → the user logs in on NodeLoc and pays
+4. **Receive the callback** → the browser redirects to your callback URL
+5. **Query status** (optional) → actively query the payment result
+6. **Transfer to other users** (optional) → call the transfer API to send the applicant's points to a specified user
+
+---
+
+## Create a payment app
+
+### Visit the management page
+
+```text
+https://www.nodeloc.com/payment/applications
+```
+
+<Note>
+  Creating a payment app requires Silver member (TL1) or above, and new apps must be approved by an admin before use.
+</Note>
+
+### Fill in the app info
+
+| Field | Description | Example |
+| --- | --- | --- |
+| **App name** | Your website/store name | "My Online Store" |
+| **Website URL** | Your website homepage | `https://example.com` |
+| **Callback URL** | The URL that receives payment notifications | `https://example.com/payment/callback` |
+| **Description** | App description (optional) | "Online store payment integration" |
+
+### Save your keys
+
+After creation, the following will be displayed:
+
+- **Payment ID**: `pay_xxxxxxxxxxxxxxxxxx`
+- **Secret Key**: `xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+
+<Warning>
+  The Secret Key is shown only once — save it immediately!
+</Warning>
+
+---
+
+## Initiate payment
+
+### API endpoint
+
+```text
+POST https://www.nodeloc.com/payment/pay/:payment_id/process
+```
+
+### Request parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `amount` | Integer | Yes | Payment amount (points) |
+| `description` | String | Yes | Transaction description |
+| `order_id` | String | Yes | Your order number (unique identifier) |
+| `signature` | String | Yes | HMAC-SHA256 signature |
+
+### Signature algorithm
+
+1. **Prepare the parameters**: `amount`, `description`, `order_id`
+2. **Sort by key name**: arrange the parameters in alphabetical order
+3. **Build the string**: in the format `key1=value1&key2=value2&key3=value3`
+4. **Compute the key**: `token_hash = SHA256(your_token)`  // your token is in the `tk_xxx` format
+5. **Generate the signature**: `signature = HMAC-SHA256(token_hash, param_string)`
+
+**Important**:
+
+- `your_token` is the token obtained when the app was created (format: `tk_xxx...`)
+- `token_hash` is the SHA256 hash of the token (64-character hex string)
+- **Do not use the token directly as the HMAC key!**
+
+**Signature parameter example**:
+
+```text
+amount=100&description=Purchase VIP membership&order_id=order_20251008_001
+```
+
+### Response data
+
+On success:
+
+```json
+{
+  "payment_url": "https://www.nodeloc.com/payment/pay/txn_xxx",
+  "transaction_id": "txn_xxx",
+  "status": "pending",
+  "amount": 100
+}
+```
+
+### Redirect to payment
+
+Redirect the user to the `payment_url` in the response. The user will:
+
+1. Be automatically redirected to the login page (if not logged in)
+2. Return to the payment page after logging in
+3. Confirm the order and complete payment
+4. Be redirected to your callback URL after a successful payment
+
+---
+
+## Handle the callback
+
+### Callback method
+
+<Warning>
+  **Important**: this is a browser GET redirect, not a server POST request!
+</Warning>
+
+After a successful payment, the user's browser redirects to the callback URL you configured, with all parameters passed as a query string.
+
+### Callback parameters (URL query parameters)
+
+| Parameter | Type | Description |
+| --- | --- | --- |
+| `transaction_id` | String | Transaction ID |
+| `external_reference` | String | Your order number (i.e. `order_id`) |
+| `amount` | Integer | Payment amount (points) |
+| `platform_fee` | Integer | Platform fee (points) |
+| `merchant_points` | Integer | Points actually received by the merchant |
+| `status` | String | Transaction status (`completed`) |
+| `paid_at` | DateTime | Payment time (ISO 8601) |
+| `signature` | String | Callback signature (for verification) |
+
+### Callback URL example
+
+```text
+https://example.com/payment/callback?
+  transaction_id=txn_xxx&
+  external_reference=order_123&
+  amount=100&
+  platform_fee=5&
+  merchant_points=95&
+  status=completed&
+  paid_at=2025-10-08T12:00:00Z&
+  signature=abc123...
+```
+
+### Verify the signature
+
+<Warning>
+  **You must verify the signature** to prevent forged requests!
+</Warning>
+
+Verification steps:
+
+1. **Extract the signature parameter**: get `signature` from the URL
+2. **Extract the other parameters**: all parameters except `signature` itself
+3. **Sort by key name**: arrange in alphabetical order
+4. **Build the string**: in the format `key1=value1&key2=value2...`
+5. **Compute the signature**: `HMAC-SHA256(secret_key, param_string)`
+6. **Compare signatures**: the computed signature must exactly match the received one
+
+**Signature parameter example**:
+
+```text
+amount=100&external_reference=order_123&merchant_points=95&paid_at=2025-10-08T12:00:00Z&platform_fee=5&status=completed&transaction_id=txn_xxx
+```
+
+### Process the order
+
+After the signature verifies:
+
+- ✅ **Check idempotency**: make sure the order hasn't already been processed
+- ✅ **Verify the amount**: confirm `amount` matches the order amount
+- ✅ **Update the order status**: mark it as paid
+- ✅ **Execute business logic**: deliver goods, activate services, etc.
+- ✅ **Show a confirmation page**: display a payment success message to the user
+
+---
+
+## Query status
+
+If the callback fails or you need to actively confirm a payment status, use the query API.
+
+### API endpoint
+
+```text
+POST https://www.nodeloc.com/payment/query/:payment_id
+```
+
+### Request parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `transaction_id` | String | Yes | Transaction ID |
+| `signature` | String | Yes | HMAC-SHA256 signature |
+
+### Signature algorithm
+
+Same as initiating payment:
+
+1. Parameters: `transaction_id`
+2. Build the string: `transaction_id=txn_xxx`
+3. Signature: `HMAC-SHA256(secret_key, param_string)`
+
+### Response data
+
+```json
+{
+  "transaction_id": "txn_xxx",
+  "status": "completed",
+  "amount": 100,
+  "platform_fee": 5,
+  "merchant_points": 95,
+  "description": "Purchase VIP membership",
+  "external_reference": "order_123",
+  "created_at": "2025-10-08T12:00:00Z",
+  "updated_at": "2025-10-08T12:05:00Z",
+  "paid_at": "2025-10-08T12:05:00Z",
+  "expires_at": "2025-10-08T12:30:00Z",
+  "expired": false,
+  "error_message": null
+}
+```
+
+### Transaction statuses
+
+| Status | Description |
+| --- | --- |
+| `pending` | Waiting for the user to pay |
+| `processing` | Payment being processed |
+| `completed` | Payment successful |
+| `failed` | Payment failed |
+| `cancelled` | Cancelled |
+| `refunded` | Refunded |
+
+### Recommended use cases
+
+- Scheduled jobs checking the status of unpaid orders
+- Users actively querying order status
+- A fallback after callback failure
+
+---
+
+## User transfer
+
+Transfer points from the **current payment app's applicant** to a specified NodeLoc user. Commonly used for external sites distributing rewards, prize draws, commission payouts, and similar scenarios.
+
+<Warning>
+  **The sender is fixed as the user who applied for the Payment app** — you cannot transfer other people's points. Make sure the applicant's account holds enough points (including the fee).
+</Warning>
+
+### API endpoint
+
+```text
+POST https://www.nodeloc.com/payment/transfer/:payment_id
+```
+
+### Request parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `to_user_id` | Integer | Yes | Recipient's NodeLoc user ID |
+| `to_username` | String | Yes | Recipient's NodeLoc username (must belong to the same user as `to_user_id`) |
+| `amount` | Integer | Yes | Number of points to transfer (excluding the fee) |
+| `order_id` | String | Yes | Your order number (for idempotency; uniquely identifies this transfer) |
+| `signature` | String | Yes | HMAC-SHA256 signature |
+
+<Warning>
+  Because user identity exists outside NodeLoc, **`to_user_id` and `to_username` must both be correct and point to the same user**; otherwise the request is rejected (this prevents transfers to the wrong account due to username changes or typos).
+</Warning>
+
+### Fee rules
+
+The fee is calculated automatically based on the **applicant's trust level (Trust Level)**, with rates following the `discourse-points-service` settings:
+
+| Trust level | Site setting | Default rate |
+| --- | --- | --- |
+| TL0 | `points_transfer_fee_rate_tl0` | 10.0% |
+| TL1 | `points_transfer_fee_rate_tl1` | 5.0% |
+| TL2 | `points_transfer_fee_rate_tl2` | 2.0% |
+| TL3 | `points_transfer_fee_rate_tl3` | 1.0% |
+| TL4 | `points_transfer_fee_rate_tl4` | 0.5% |
+
+The TL-specific `points_transfer_min_amount_tl{0..4}` / `points_transfer_max_amount_tl{0..4}` limits also apply.
+
+Formula:
+
+```text
+fee             = round(amount * fee_rate / 100)
+total_deduction = amount + fee     // deducted from the applicant
+recipient_gets  = amount           // received by the recipient
+```
+
+### Signature algorithm
+
+1. **Prepare the parameters**: `to_user_id`, `to_username`, `amount`, `order_id`
+2. **Sort by key name in alphabetical order**
+3. **Build the string**: `key1=value1&key2=value2&...`
+4. **Compute the signature**: `HMAC-SHA256(token_hash, param_string)`
+   - `token_hash = SHA256(your_token)`, same as initiating payment
+
+**Signature parameter example**:
+
+```text
+amount=100&order_id=transfer_20260425_001&to_user_id=123&to_username=alice
+```
+
+### Idempotency
+
+- Transfers with the same `payment_id` + `order_id` are treated as the **same transfer**.
+- If the order is already `completed`, the original result is returned directly (no double charge).
+- If the order exists but its status is not `completed`, the request is rejected.
+
+### Response data
+
+On success (`200 OK`):
+
+```json
+{
+  "success": true,
+  "transaction_id": "txn_xxx",
+  "order_id": "transfer_20260425_001",
+  "status": "completed",
+  "amount": 100,
+  "fee": 5,
+  "total_deduction": 105,
+  "from_user_id": 42,
+  "from_username": "merchant_owner",
+  "to_user_id": 123,
+  "to_username": "alice",
+  "paid_at": "2026-04-25T12:15:00Z"
+}
+```
+
+On failure (`400` / `401`):
+
+```json
+{
+  "success": false,
+  "error": "Receiver id and username do not match"
+}
+```
+
+### Common errors
+
+| Error message | Description |
+| --- | --- |
+| `Invalid signature` | Signature error; regenerate it following the signature algorithm |
+| `Invalid amount` | `amount` must be an integer greater than 0 |
+| `Receiver id and username do not match` | `to_user_id` and `to_username` do not match |
+| `Cannot transfer to yourself` | The recipient cannot be the applicant |
+| `Amount below minimum limit (X)` | Below the minimum limit for that TL |
+| `Amount exceeds maximum limit (X)` | Above the maximum limit for that TL |
+| `Insufficient balance (need X, have Y)` | Balance too low to cover `amount + fee` |
+| `Transfer feature is disabled` | The site has disabled the transfer feature |
+| `Order already exists with status ...` | The same `order_id` already exists and is not completed |
+
+### Recommended use cases
+
+- External sites distributing rewards to NodeLoc users
+- Prize draws and event payouts
+- Commission and revenue-share settlement
+- Returning points to a specified user after acquiring them
+
+---
+
+## Security recommendations
+
+### 1. Protect your keys
+
+- ❌ Don't hardcode them in code
+- ✅ Use environment variables or a key management service
+
+### 2. Use HTTPS
+
+- ✅ Production environments must use HTTPS
+- ✅ The callback URL must be an HTTPS address
+
+### 3. Verify signatures
+
+- ✅ Verify the signature on all callback requests
+- ✅ Reject requests when the signature doesn't match
+
+### 4. Prevent duplicate processing
+
+- ✅ Check order status to prevent duplicate processing
+- ✅ Use a unique `order_id` for transfers to guarantee idempotency
+- ✅ Use database transactions to ensure atomicity
+
+### 5. Verify amounts
+
+- ✅ Verify that the callback amount matches the order amount
+- ✅ Log and raise an alert when amounts don't match
+
+### 6. Verify the recipient
+
+- ✅ Before transferring, confirm that `to_user_id` and `to_username` come from a trusted source
+- ✅ Never transfer based on username alone — always validate the ID as well
+
+### 7. Logging
+
+- ✅ Log all payment/transfer-related operations
+- ✅ Log all callback requests (including those that fail signature verification)
+
+---
+
+## FAQ
+
+<AccordionGroup>
+  <Accordion title="Q: Signature verification fails?">
+    Check the following:
+
+    1. Are the parameters sorted by key name in alphabetical order?
+    2. Is the parameter string in the `key=value&key=value` format?
+    3. Is the Secret Key correct?
+    4. Did you exclude the `signature` parameter itself when verifying?
+    5. Is the character encoding consistent (UTF-8)?
+  </Accordion>
+
+  <Accordion title="Q: Callback not received?">
+    Possible causes:
+
+    1. The callback URL is configured incorrectly
+    2. The user closed the browser window
+    3. A network issue caused the redirect to fail
+
+    **Solution**: use the query API to periodically check order status
+  </Accordion>
+
+  <Accordion title="Q: How do I test?">
+    Testing in a development environment:
+
+    1. Use a tool like ngrok to expose your local server
+    2. Create a test app on NodeLoc
+    3. Set the callback URL to the ngrok address
+    4. Create small-amount orders for testing
+  </Accordion>
+
+  <Accordion title="Q: Are refunds supported?">
+    Automatic refunds are not currently supported; contact an admin for manual handling.
+  </Accordion>
+
+  <Accordion title="Q: Do orders expire?">
+    Yes. Orders expire automatically after 30 minutes if unpaid.
+  </Accordion>
+
+  <Accordion title="Q: Can I transfer to any user?">
+    Yes, as long as the `to_user_id` and `to_username` you provide are both correct and point to the same NodeLoc user. The sender is fixed as the user who applied for the Payment app — you cannot use this API to transfer other people's points.
+  </Accordion>
+
+  <Accordion title="Q: What is the transfer fee?">
+    The fee is calculated based on the applicant's current trust level (TL0–TL4), corresponding to the site settings `points_transfer_fee_rate_tl0` through `points_transfer_fee_rate_tl4`. The applicant is charged `amount + fee`; the recipient receives `amount`.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## API reference
+
+### Initiate payment
+
+- **URL**: `POST /payment/pay/:payment_id/process`
+- **Authentication**: signature verification
+- **Request**: `amount`, `description`, `order_id`, `signature`
+- **Response**: `payment_url`, `transaction_id`, `status`, `amount`
+
+### Query status
+
+- **URL**: `POST /payment/query/:payment_id`
+- **Authentication**: signature verification
+- **Request**: `transaction_id`, `signature`
+- **Response**: full transaction info (see above)
+
+### User transfer
+
+- **URL**: `POST /payment/transfer/:payment_id`
+- **Authentication**: signature verification
+- **Sender**: fixed as the Payment app applicant
+- **Request**: `to_user_id`, `to_username`, `amount`, `order_id`, `signature`
+- **Response**: `transaction_id`, `order_id`, `status`, `amount`, `fee`, `total_deduction`, `from_user_id`, `from_username`, `to_user_id`, `to_username`, `paid_at`
+
+### Payment callback
+
+- **Method**: browser GET redirect
+- **URL**: the `callback_url` you configured
+- **Authentication**: signature verification
+- **Parameters**: `transaction_id`, `external_reference`, `amount`, `platform_fee`, `merchant_points`, `status`, `paid_at`, `signature`
+
+---
+
+**Happy integrating!** 🚀

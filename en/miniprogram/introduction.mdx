@@ -1,0 +1,67 @@
+---
+title: "Mini apps overview"
+description: "NodeLoc in-site mini apps: sandboxed applications that run inside topics. Learn about the architecture, the security model, the two UI surfaces, and how to apply for developer access"
+---
+
+In-site mini apps (Apps) are interactive applications that run inside NodeLoc topics — they can be mini games, small tools, or bot-assisted moderation tools. They execute in a server-side sandbox and can only use permissions approved through review.
+
+<Frame>
+  <img src="/images/screenshots/en/miniprogram-topic.png" alt="A snake mini app running inside a topic, with its leaderboard" />
+</Frame>
+
+## What this is
+
+A mini app is **a JS module that exports a set of handlers**. Handlers run in a server-side sandbox — no network, no disk, no author account, no `window`. Everything a handler can read comes from `api`; everything it wants to change is declared as `effects`, which the site validates one by one and commits in a single transaction.
+
+This constraint is not a limitation — it's the reason this system can exist at all: **whatever the page says doesn't count**, which is why scores, points, and leaderboards can be trusted.
+
+|  | Where it runs | Trust level |
+|---|---|---|
+| Handlers (`render` / `onAction` / `onMessage` …) | Server-side sandbox | Trusted; the only place that can write data |
+| webview pages (the mini app's own HTML/JS) | User's browser | **Untrusted**; can only submit material to be verified |
+
+## Mini app directory
+
+All published mini apps are listed at [www.nodeloc.com/apps](https://www.nodeloc.com/apps):
+
+<Frame>
+  <img src="/images/screenshots/en/miniprogram-directory.png" alt="Mini app directory page" />
+</Frame>
+
+## Transparent permissions
+
+Each mini app's detail page lists every permission it has been granted, so users can see what it can do before opening it:
+
+<Frame>
+  <img src="/images/screenshots/en/miniprogram-detail.png" alt="Mini app detail page showing the permission list" />
+</Frame>
+
+Mini apps run in a sandbox, cannot access user accounts, and can only do what is listed in their permission list.
+
+## Two UI surfaces
+
+### Blocks (default)
+
+Handlers return a component tree, which the site renders natively. You can't write HTML, so XSS is impossible. Well suited for polls, sign-ups, counters, and form-style tools. See [Blocks components](/en/miniprogram/blocks) for the component list.
+
+### Webview (requires separate admin approval)
+
+The mini app draws its own UI (HTML + CSS + JS) and gets a real client-side loop. The trade-off is that **scores from the page are untrusted** — to make the leaderboard, the server must be able to verify them. See [Writing handlers](/en/miniprogram/handlers).
+
+<Note>
+webview requires the site to enable the capability, and an admin must grant it **to each mini app individually**. To apply, declare `"surface": "webview"` in `app.json`.
+</Note>
+
+## Data model
+
+- **Per-user data region**: each member has their own isolated KV space under each installation.
+- **Shared region**: shared by everyone under the same installation (leaderboards, world state); **only handlers can write to it** — pages can never reach it.
+- **Installation as isolation**: one installation, one shared region. A mini app with a site-wide leaderboard must use the `single` placement. See [app.json and readme](/en/miniprogram/manifest).
+
+## Becoming a developer
+
+Mini apps are currently in beta, and developer access is granted by user group. To join development, contact an admin to get access; once granted, you can visit the author center at [www.nodeloc.com/apps/authoring](https://www.nodeloc.com/apps/authoring).
+
+<Card title="Quickstart" icon="rocket" href="/en/miniprogram/quickstart">
+  Once you have access, get your first mini app running with the CLI in ten minutes
+</Card>

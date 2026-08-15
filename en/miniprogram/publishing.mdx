@@ -1,0 +1,66 @@
+---
+title: "Review and publishing"
+description: "The review submission flow, what reviewers can see, placing apps into topics, quota limits, and troubleshooting common errors"
+---
+
+## Submitting for review
+
+```bash
+nodeloc-apps upload --note "Explain what changed in this version"
+```
+
+- A mini app can have **only one pending version** at a time.
+- Reviewers see the code diff, the `readme.md`, the permissions you requested, and **anything beyond the currently granted scope (highlighted)**.
+- **Approval and authorization are two separate things**: a reviewer can pass the code without expanding permissions. So only request the scopes you truly need — asking for more slows down review.
+- Rejections always come with a reason, and you'll receive a notification.
+
+## Placing into topics
+
+Once approved, open the mini app's detail page `/apps/<slug>`, paste a link to your own topic (or its topic ID), and you're done in one click — the embed tag is written into the topic automatically, no manual copying needed.
+
+<Note>
+For a mini app with `placement` set to `many`, any member can place it into their own topics; with `single`, only the author and staff can place it.
+</Note>
+
+**Upgrading to the latest approved version**: place it again in the original topic.
+
+## Quotas and limits
+
+|  | Limit |
+|---|---|
+| Bundled code | 512 KB |
+| `readme.md` | 64 KB |
+| Blocks tree | 500 nodes / 32 levels of nesting / 256 KB |
+| Per-invocation duration | Site-configurable; 3 seconds by default |
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="This app already has a pending version">
+    Wait for the review result, or ask a reviewer to reject it first.
+  </Accordion>
+  <Accordion title="fetch fails inside the sandbox">
+    The sandbox has no network access — that's by design. Mini apps that need external data can't be built right now.
+  </Accordion>
+  <Accordion title="Not signed in. Run nodeloc-apps login first.">
+    You're not logged in, or you switched machines. Run `nodeloc-apps login`.
+  </Accordion>
+  <Accordion title="E_SCOPE_DENIED">
+    An effect you returned requires a scope that hasn't been granted. Use `nodeloc-apps logs` to find the invocation, then request the scope in `scopes` in `app.json` and resubmit for review.
+  </Accordion>
+  <Accordion title="E_INVALID_BLOCKS">
+    The component tree contains an unknown type or prop, or exceeds the 500 node / 32 level / 256 KB limit.
+  </Accordion>
+  <Accordion title="E_APP_TIMEOUT / E_APP_OUT_OF_MEMORY">
+    The sandbox killed the invocation. Handlers need to compute fast and use little memory.
+  </Accordion>
+  <Accordion title="window.community is undefined in the webview">
+    The mini app hasn't been granted the `webview` permission, or the site hasn't enabled webview support.
+  </Accordion>
+  <Accordion title="Client reports X is not defined">
+    Page JS is injected as source, not a closure, so module-level constants must be injected too. See [Writing handlers](/en/miniprogram/handlers).
+  </Accordion>
+  <Accordion title="The mini app can only be placed in one location">
+    Your `placement` is `single`. If you truly need multiple locations, change it to `many` — but think through the fact that the shared region will be split.
+  </Accordion>
+</AccordionGroup>

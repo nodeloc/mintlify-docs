@@ -1,0 +1,80 @@
+---
+title: "Energy System"
+description: "Check your Energy balance, transaction history, transfer rules, and fees"
+---
+
+Energy is NodeLoc's points system, woven through features like check-ins, rewards, red envelopes, lotteries, and paid content.
+
+## Check Your Energy Balance and History
+
+Visit [Profile → Energy](https://www.nodeloc.com/my/points-history) (or go directly to `/u/your-username/points-history`) to see:
+
+- **Current total Energy**
+- **Events**: details of every Energy transaction (check-in rewards, reward income, lottery ticket purchases, transfers, etc.)
+- **Energy**: Energy statistics grouped by activity type
+
+<Frame>
+  <img src="/images/screenshots/en/points-history.png" alt="Energy history page" />
+</Frame>
+
+The Preferences → Account page also shows your current Energy balance.
+
+## How to Earn Energy
+
+| Action | Energy |
+| --- | --- |
+| Daily check-in | See [Daily Check-in](/en/energy/checkin) |
+| Create a topic | +5 |
+| Reply to a post | +2 |
+| Receive a like | +1 |
+| Receive a reply | +1 |
+| Post marked as best answer | +100 |
+| Invited user registers | +10 |
+| Report accepted by staff | +10 |
+| Visit the site daily | +1 |
+| Receive a reward | The amount paid by the sender |
+| Claim a red envelope | Random amount |
+
+<Note>
+  The above are the default rules. Actual values may change with operational policy — the credited amount prevails.
+</Note>
+
+## Energy Transfers
+
+You can transfer Energy to other users.
+
+<Steps>
+  <Step title="Open their user card">
+    Click their avatar to open the user card.
+  </Step>
+  <Step title="Click Transfer">
+    Click the "Transfer" button on the card, enter an amount, and confirm.
+  </Step>
+</Steps>
+
+### Fees and Limits
+
+The transfer fee is **paid by the sender on top of the transfer amount**. Rates and limits decrease/increase with trust level:
+
+| Trust Level | Fee Rate | Min per Transfer | Max per Transfer |
+| --- | --- | --- | --- |
+| Bronze Member (TL0) | 10% | 10 | 100 |
+| Silver Member (TL1) | 5% | 5 | 500 |
+| Gold Member (TL2) | 2% | 1 | 1,000 |
+| Diamond Member (TL3) | 1% | 1 | 5,000 |
+| King Member (TL4) | 0.5% | 1 | 10,000 |
+
+**Example**: a Silver Member transfers 100 Energy — 105 is deducted from their balance (100 + 5 fee), and the recipient receives 100.
+
+<Tip>
+  Raising your trust level significantly reduces transfer costs. See [Energy & Trust Levels](/en/level) for level rules.
+</Tip>
+
+## What Energy Is Used For
+
+- [Reward](/en/features/reward) great posts
+- Send [red envelopes](/en/features/red-envelope)
+- Buy [lottery](/en/features/lottery) tickets
+- Purchase [pay-to-view](/en/features/hidden-content) content
+- Spend on third-party websites integrated with the [payment system](/en/api-reference/payment)
+- Transfer to other users

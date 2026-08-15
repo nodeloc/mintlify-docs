@@ -1,0 +1,64 @@
+---
+title: "Hidden Content"
+description: "How to use the three content tags: reply-to-view, login-to-view, and pay-to-view"
+---
+
+When posting, you can hide parts of your content and require readers to meet certain conditions (reply, log in, or pay) before viewing. This is commonly used for resource sharing, giveaways, and similar scenarios.
+
+## The Three Tags
+
+| Tag | Syntax | Effect |
+| --- | --- | --- |
+| Reply to view | `[reply]content[/reply]` | Visible after the reader replies in the topic |
+| Login to view | `[login]content[/login]` | Visible to logged-in users only; guests see "Please log in to view the content" |
+| Pay to view | `[pay amount=100]content[/pay]` | Visible after the reader pays the specified Energy |
+
+You can also click the corresponding buttons in the editor toolbar (reply to view / login to view / pay to view) to insert the tags; pay-to-view opens an amount settings window.
+
+### Example
+
+```markdown
+Thanks for your support! Here's the download link:
+
+[reply]
+https://example.com/download
+[/reply]
+```
+
+## Pay-to-View in Detail
+
+### Pricing Rules
+
+- The amount is in Energy, defaults to 100, and can be at most 10,000.
+- The `amount` goes inside the tag: `[pay amount=50]...[/pay]`.
+- The topic author can always see their own paid content.
+
+### Purchase Flow
+
+1. The reader sees a notice: "This content is only visible to users who have paid N Energy."
+2. Click "Pay N Energy to view", confirm, and the payment is deducted immediately while the content is revealed.
+3. The page shows how many people have purchased the content.
+
+### Service Fee
+
+When purchasing paid content, **the buyer pays an additional service fee**, and the rate decreases as your trust level rises:
+
+| Trust Level | Fee Rate |
+| --- | --- |
+| Bronze member (TL0) | 10% |
+| Silver member (TL1) | 8% |
+| Gold member (TL2) | 5% |
+| Diamond member (TL3) | 3% |
+| King member (TL4) | 0% |
+
+For example, when a Gold member buys content priced at 100 Energy, 105 Energy is actually deducted, and the author receives 100 Energy.
+
+<Warning>
+  Paid purchases are **non-refundable**. There is a confirmation prompt before payment — make sure you want the content before buying. If you don't have enough Energy, you'll see "You don't have enough Energy to view this content."
+</Warning>
+
+## Usage Tips
+
+- **Reply to view** is great for driving engagement, but don't use it for meaningless content — overuse will be treated as spamming.
+- **Pay to view** works best for genuinely valuable resources, tutorials, invite slots, and the like.
+- Don't put rule-breaking content in hidden tags — moderators can view all hidden content.

@@ -9,89 +9,185 @@
   },
   "favicon": "/images/favicon.png",
   "navigation": {
-    "tabs": [
+    "languages": [
       {
-        "tab": "使用指南",
-        "groups": [
+        "language": "zh",
+        "tabs": [
           {
-            "group": "新手入门",
-            "pages": [
-              "index",
-              "quickstart",
-              "getting-started/account",
-              "getting-started/posting"
+            "tab": "使用指南",
+            "groups": [
+              {
+                "group": "新手入门",
+                "pages": [
+                  "index",
+                  "quickstart",
+                  "getting-started/account",
+                  "getting-started/posting"
+                ]
+              },
+              {
+                "group": "等级与能量",
+                "pages": [
+                  "level",
+                  "energy/points",
+                  "energy/checkin"
+                ]
+              },
+              {
+                "group": "互动玩法",
+                "pages": [
+                  "features/lottery",
+                  "features/red-envelope",
+                  "features/reward",
+                  "features/hidden-content",
+                  "features/read-permission"
+                ]
+              },
+              {
+                "group": "社区功能",
+                "pages": [
+                  "community/nodes",
+                  "community/chat",
+                  "community/projects",
+                  "community/miniprogram",
+                  "community/leaderboards"
+                ]
+              },
+              {
+                "group": "账号与通知",
+                "pages": [
+                  "common/telegram",
+                  "account/preferences"
+                ]
+              },
+              {
+                "group": "推广与商业",
+                "pages": [
+                  "promotion/ads",
+                  "promotion/merchants"
+                ]
+              },
+              {
+                "group": "帮助与共建",
+                "pages": [
+                  "faq",
+                  "create"
+                ]
+              }
             ]
           },
           {
-            "group": "等级与能量",
-            "pages": [
-              "level",
-              "energy/points",
-              "energy/checkin"
-            ]
-          },
-          {
-            "group": "互动玩法",
-            "pages": [
-              "features/lottery",
-              "features/red-envelope",
-              "features/reward",
-              "features/hidden-content",
-              "features/read-permission"
-            ]
-          },
-          {
-            "group": "社区功能",
-            "pages": [
-              "community/nodes",
-              "community/chat",
-              "community/projects",
-              "community/miniprogram",
-              "community/leaderboards"
-            ]
-          },
-          {
-            "group": "账号与通知",
-            "pages": [
-              "common/telegram",
-              "account/preferences"
-            ]
-          },
-          {
-            "group": "推广与商业",
-            "pages": [
-              "promotion/ads",
-              "promotion/merchants"
-            ]
-          },
-          {
-            "group": "帮助与共建",
-            "pages": [
-              "faq",
-              "create"
+            "tab": "开发者文档",
+            "groups": [
+              {
+                "group": "API 对接",
+                "pages": [
+                  "api-reference/introduction",
+                  "api-reference/payment"
+                ]
+              },
+              {
+                "group": "小程序开发",
+                "pages": [
+                  "miniprogram/introduction",
+                  "miniprogram/quickstart",
+                  "miniprogram/manifest",
+                  "miniprogram/handlers",
+                  "miniprogram/blocks",
+                  "miniprogram/publishing"
+                ]
+              }
             ]
           }
         ]
       },
       {
-        "tab": "开发者文档",
-        "groups": [
+        "language": "en",
+        "tabs": [
           {
-            "group": "API 对接",
-            "pages": [
-              "api-reference/introduction",
-              "api-reference/payment"
+            "tab": "User Guide",
+            "groups": [
+              {
+                "group": "Getting Started",
+                "pages": [
+                  "en/index",
+                  "en/quickstart",
+                  "en/getting-started/account",
+                  "en/getting-started/posting"
+                ]
+              },
+              {
+                "group": "Levels & Energy",
+                "pages": [
+                  "en/level",
+                  "en/energy/points",
+                  "en/energy/checkin"
+                ]
+              },
+              {
+                "group": "Interactive Features",
+                "pages": [
+                  "en/features/lottery",
+                  "en/features/red-envelope",
+                  "en/features/reward",
+                  "en/features/hidden-content",
+                  "en/features/read-permission"
+                ]
+              },
+              {
+                "group": "Community",
+                "pages": [
+                  "en/community/nodes",
+                  "en/community/chat",
+                  "en/community/projects",
+                  "en/community/miniprogram",
+                  "en/community/leaderboards"
+                ]
+              },
+              {
+                "group": "Account & Notifications",
+                "pages": [
+                  "en/common/telegram",
+                  "en/account/preferences"
+                ]
+              },
+              {
+                "group": "Promotion & Business",
+                "pages": [
+                  "en/promotion/ads",
+                  "en/promotion/merchants"
+                ]
+              },
+              {
+                "group": "Help & Contribute",
+                "pages": [
+                  "en/faq",
+                  "en/create"
+                ]
+              }
             ]
           },
           {
-            "group": "小程序开发",
-            "pages": [
-              "miniprogram/introduction",
-              "miniprogram/quickstart",
-              "miniprogram/manifest",
-              "miniprogram/handlers",
-              "miniprogram/blocks",
-              "miniprogram/publishing"
+            "tab": "Developer Docs",
+            "groups": [
+              {
+                "group": "API Integration",
+                "pages": [
+                  "en/api-reference/introduction",
+                  "en/api-reference/payment"
+                ]
+              },
+              {
+                "group": "Mini App Development",
+                "pages": [
+                  "en/miniprogram/introduction",
+                  "en/miniprogram/quickstart",
+                  "en/miniprogram/manifest",
+                  "en/miniprogram/handlers",
+                  "en/miniprogram/blocks",
+                  "en/miniprogram/publishing"
+                ]
+              }
             ]
           }
         ]

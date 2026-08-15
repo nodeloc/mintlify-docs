@@ -1,0 +1,104 @@
+---
+title: "Quickstart"
+description: "Install the nodeloc-apps CLI and walk through the full flow: login, project init, playtest hot-reload, and submitting for review"
+---
+
+There are two ways to publish a mini app: **web publishing** (install nothing; good for small changes and a first try) and the **CLI** (write code locally, hot-reload, view logs; recommended).
+
+## Option A: web publishing
+
+<Steps>
+  <Step title="Open the author center">
+    Visit [www.nodeloc.com/apps/authoring](https://www.nodeloc.com/apps/authoring).
+  </Step>
+  <Step title="Create a mini app">
+    Click "New app" and fill in a name and slug (lowercase letters, digits, hyphens).
+  </Step>
+  <Step title="Paste your code">
+    Paste your handler code into the editor and check the permissions you need.
+  </Step>
+  <Step title="Submit for review">
+    Wait for an admin to review. Once approved, place the mini app into a topic from its detail page — see [Review and publishing](/en/miniprogram/publishing).
+  </Step>
+</Steps>
+
+## Option B: CLI (recommended)
+
+### Installation
+
+Requires **Node.js 22 or later**. The CLI is not yet published to the npm registry, so install it from source:
+
+```bash
+git clone https://github.com/nodeloc/nodeloc-apps-cli.git
+cd nodeloc-apps-cli
+npm install -g .
+
+nodeloc-apps --help
+```
+
+### Logging in
+
+```bash
+nodeloc-apps login --site https://www.nodeloc.com
+```
+
+The terminal prints a verification code and a link. Open the link in your browser, **check that the code on the page matches the one in your terminal** (if it doesn't, close the page — that approval request wasn't initiated by you), click "Approve", and the terminal receives credentials automatically.
+
+Credentials are stored in `~/.config/nodeloc-apps/credentials.json`, readable only by you. This key can only publish your own mini apps — it can't do anything else on the site. Running `login` again immediately invalidates the previous key.
+
+```bash
+nodeloc-apps whoami    # Show the currently logged-in identity
+nodeloc-apps logout    # Delete the credentials on this machine
+```
+
+<Tip>
+**CI or machines without a browser**: click "Generate key" on the author page and use environment variables instead (they take precedence over credentials saved by `login`):
+
+```bash
+export NODELOC_APPS_SITE=https://www.nodeloc.com
+export NODELOC_APPS_API_KEY=...
+export NODELOC_APPS_API_USERNAME=your-username
+```
+</Tip>
+
+### Initialize a project
+
+```bash
+nodeloc-apps init my-game --template counter   # counter | race
+cd my-game
+```
+
+```
+my-game/
+  app.json        # Config read by the platform
+  readme.md       # Intro shown on the detail page, optional
+  src/main.js     # Entry point; the template runs as-is
+```
+
+| Template | Contents |
+|---|---|
+| `counter` | Minimal blocks example: one button, one counter |
+| `race` | Multiplayer blocks example: whoever presses first scores, demonstrating the trusted pattern of "the client only says 'I pressed'; the handler decides who wins" |
+
+### Development loop
+
+```bash
+nodeloc-apps dev        # Bundle + static checks, no upload
+nodeloc-apps playtest   # Push to a private installation only you can see; re-pushes automatically on file changes
+nodeloc-apps upload --note "Added a leaderboard"   # Submit for review
+nodeloc-apps logs --limit 50              # View runtime logs
+```
+
+- `dev` inlines relative imports into a single module and catches patterns the server would definitely reject (missing `render` export, `eval`, `node:` built-ins, browser globals, `fetch`).
+- The `playtest` installation **is visible only to you**, needs no review, and can be experimented with freely. It watches `.js` changes under `src/`, re-pushes on save, and the page refreshes automatically.
+- `logs` prints the handler, result, duration, and error code for each invocation:
+
+```text
+14:32:07  render    ok           12ms
+14:32:11  onAction  ok            8ms
+14:32:19  onAction  error        31ms  E_SCOPE_DENIED
+```
+
+<Card title="Next: configure app.json" icon="file-code" href="/en/miniprogram/manifest">
+  Learn about every field the platform reads
+</Card>

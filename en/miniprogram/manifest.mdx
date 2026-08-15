@@ -1,0 +1,69 @@
+---
+title: "app.json and readme"
+description: "Field reference for the mini app manifest, readme.md display rules, and how to choose a placement"
+---
+
+## app.json
+
+The `app.json` in the project root is the only config file the platform reads:
+
+```json
+{
+  "slug": "my-game",
+  "name": "My game",
+  "entry": "src/main.js",
+  "scopes": ["kv"],
+  "surface": "blocks",
+  "placement": "single",
+  "triggers": []
+}
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `slug` | Yes | Lowercase letters, digits, hyphens; unique site-wide; appears in the URL |
+| `name` | Yes | Name shown in the directory |
+| `entry` | Yes | Entry file for bundling |
+| `scopes` | No | Requested permissions; see [Permissions and data](/en/miniprogram/handlers#权限与数据) |
+| `surface` | No | `blocks` (default) or `webview` (requires a separate admin grant) |
+| `placement` | No | `single` (default) or `many`; see below |
+| `triggers` | No | Subscribed site events: `post_created`, `topic_created`, `post_liked` |
+
+The platform only reads the fields above; anything else is not uploaded.
+
+## placement: placement options
+
+| Value | Meaning | Who can place it | Good for |
+|---|---|---|---|
+| `single` | Only one instance should exist site-wide | Only the author and staff | Site-wide leaderboards, shared worlds, seasonal points |
+| `many` | Each location gets its own copy | Anyone can put it in their own topics | Polls, sign-ups, countdowns, dice, unit converters |
+
+<Warning>
+**Each installation has its own independent shared region.** A mini app with a site-wide leaderboard must be `single` — placing it in two locations splits the leaderboard in half.
+</Warning>
+
+## readme.md
+
+The `readme.md` in the project root is uploaded together with the code, rendered as Markdown, and shown on the mini app's detail page (`/apps/<slug>`). It's the only thing people read before deciding whether to open your mini app — the `name` in `app.json` is a single line and can't tell the story.
+
+It's plain Markdown: headings, lists, bold, links, and code blocks are all supported, rendered by the same renderer as posts:
+
+```markdown
+# My game
+
+One sentence explaining what this is.
+
+## How to play
+
+1. Click "Start"
+2. ...
+
+## Scoring
+```
+
+Things to know:
+
+- **The readme follows the version, not the mini app.** Whichever version you upload is the version whose readme the page shows; reviewers see that same copy. Changing the readme requires submitting a new version — a mini app approved as a "dice tool" can't quietly rewrite its description a few days later.
+- You can publish without a `readme.md`; this section simply won't appear on the page.
+- Limit: **64 KB**.
+- The CLI isn't required: the submission form in the author center (`/apps/authoring/<slug>`) has the same field, pre-filled with whatever you wrote in the previous version.

@@ -1,0 +1,63 @@
+---
+title: "Blocks components"
+description: "All components, props, and value ranges available to blocks mini apps"
+---
+
+A blocks mini app's UI is built from a component tree, rendered natively by the site. You can't write HTML, so XSS is impossible.
+
+## Component list
+
+| Component | Props |
+|---|---|
+| `vstack` `hstack` | `gap` `align` `padding` + `children` |
+| `zstack` | `align` + `children` |
+| `text` | `value` `size` `weight` `align` |
+| `button` | `label` `icon` `variant` `action` `disabled` |
+| `image` | `url` `width` `height` `fit` `alt` |
+| `icon` | `name` `size` |
+| `spacer` | `size` |
+| `divider` | — |
+| `progress` | `value` `max` |
+| `input` | `name` `placeholder` `value` |
+| `select` | `name` `value` `options` |
+
+## Value ranges
+
+| Prop | Allowed values |
+|---|---|
+| `size` / `gap` / `padding` | `xs` `small` `medium` `large` `xl` |
+| `align` | `start` `center` `end` `stretch` |
+| `weight` | `regular` `medium` `bold` |
+| `variant` | `primary` `secondary` `danger` `flat` |
+| `fit` | `contain` `cover` `fill` |
+
+<Warning>
+Unknown component types and unknown props are **rejected**, not ignored — if you think you rendered a button but nothing shows up, that's a bug you should be able to see, and the server rejects the invocation with `E_INVALID_BLOCKS`.
+</Warning>
+
+Component tree limits: **500 nodes / 32 levels of nesting / 256 KB**.
+
+## Example
+
+```js
+{
+  type: "vstack",
+  gap: "small",
+  padding: "medium",
+  children: [
+    { type: "text", value: "Table high score", weight: "bold", size: "large" },
+    { type: "divider" },
+    { type: "progress", value: 40, max: 100 },
+    {
+      type: "hstack",
+      gap: "small",
+      children: [
+        { type: "button", label: "Raise", action: "raise", variant: "primary" },
+        { type: "button", label: "Fold", action: "fold", variant: "flat" },
+      ],
+    },
+  ],
+}
+```
+
+A button's `action` is passed to `onAction` as `ctx.action_id`; the values of `input` and `select` are collected into `ctx.inputs`.

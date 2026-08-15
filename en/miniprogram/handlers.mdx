@@ -1,0 +1,136 @@
+---
+title: "Writing handlers"
+description: "Handler signatures, ctx context fields, render/onAction and webview/onMessage patterns, background handlers, reads via api and writes via effects"
+---
+
+Every handler has the signature `(ctx, api)` and may be async. Each handler returns the `{ blocks, state, effects }` triple:
+
+- `blocks`: the component tree; `null` means the UI doesn't need to change
+- `state`: local state passed back to you on the next invocation
+- `effects`: operations such as writing data or sending notifications, declared so the site can validate each one and commit them in a single transaction
+
+## ctx: context
+
+```json
+{
+  "install_id": 12,
+  "version": 3,
+  "locale": "zh_CN",
+  "config": {},
+  "topic_id": 481,
+  "post_id": 1902,
+  "category_id": 5,
+  "user": { "id": 7, "username": "ada", "avatar_url": "..." },
+  "state": {}
+}
+```
+
+| Field | Description |
+|---|---|
+| `install_id` / `version` | Current installation and version number |
+| `locale` | Current user's language |
+| `config` | Configuration provided at install time |
+| `topic_id` / `post_id` / `category_id` | Where the mini app sits in the topic |
+| `user` | Current user; `null` for anonymous visitors |
+| `state` | The state returned by the previous handler invocation |
+| `action_id` / `inputs` | `onAction` only: the action of the clicked button and the form inputs |
+| `method` / `params` | `onMessage` only: the method called by the page and its parameters |
+
+This list is the privacy boundary — it is deliberately narrow because it is visible to every mini app author.
+
+## Blocks: render and onAction
+
+A blocks mini app returns a component tree, which the site renders natively:
+
+```js
+export async function render(ctx, api) {
+  const count = (await api.kv.get("count")) ?? 0;
+  return { blocks: view(count), state: { count }, effects: [] };
+}
+
+export async function onAction(ctx, api) {
+  if (ctx.action_id !== "bump") {
+    return { blocks: null, state: ctx.state, effects: [] };
+  }
+  const count = (ctx.state?.count ?? 0) + 1;
+  return {
+    blocks: view(count),
+    state: { count },
+    effects: [{ type: "kv.set", key: "count", value: count }],
+  };
+}
+
+function view(count) {
+  return {
+    type: "vstack", gap: "small", children: [
+      { type: "text", value: `Clicked ${count} times`, weight: "bold" },
+      { type: "button", label: "Click again", action: "bump", variant: "primary" },
+    ],
+  };
+}
+```
+
+## Webview: webview and onMessage
+
+A webview mini app draws its own UI (HTML + CSS + JS) and gets a real client-side loop:
+
+```js
+export async function webview(ctx, api) {
+  return { html: "...", css: "...", js: "..." };
+}
+
+export async function onMessage(ctx, api) {
+  // The page reaches this via window.community.call(method, params)
+  if (ctx.method !== "submit") {
+    return { blocks: null, state: null, effects: [] };
+  }
+  // Validate, compute the score, write to the shared region
+}
+```
+
+### Making scores trustworthy: seed replay
+
+Scores from the page are untrusted. To make the leaderboard, the server must be able to **verify** them: the server issues a seed, the page sends back the sequence of moves, and `onMessage` replays them with the same simulation logic to compute the real score. A cheater who wants on the board has to actually play the game well — that's how the site's snake mini app works: its scores are computed by the server replaying the moves.
+
+<Warning>
+The JS in the page is injected as a **source string**, not a closure. Any module-level constants it references must be included in the injected preamble, or you'll get `X is not defined` at runtime.
+</Warning>
+
+## Background handlers
+
+| Handler | When it fires |
+|---|---|
+| `onTrigger(ctx, api)` | Site events declared in `triggers` (`post_created`, `topic_created`, `post_liked`) |
+| `onSchedule(ctx, api)` | Scheduled tasks registered via `schedule.add` |
+
+Both run as the mini app's own bot account and **cannot read any member's private data**.
+
+## Permissions and data
+
+Reads (via `api`, all require `await`; data is prefetched by the platform before the call, so the sandbox never actually queries the database):
+
+| Call | Contents | Required scope |
+|---|---|---|
+| `api.kv.get(key)` / `api.kv.list()` | The current member's data under this installation | `kv` |
+| `api.kv.listPublic()` | Shared region | `kv.shared` |
+| `api.points.balance()` | Points balance | `points` |
+
+Writes (return `effects`; each is validated and committed in a single transaction):
+
+| Effect | Required scope |
+|---|---|
+| `kv.set` / `kv.delete` | `kv` |
+| `kv.shared.set` / `kv.shared.delete` | `kv.shared` |
+| `ui.toast` / `ui.navigate` | `ui` |
+| `points.award` | `points` |
+| `rt.publish` | `realtime` |
+| `schedule.add` / `schedule.cancel` | `schedule` |
+
+Two things to remember:
+
+- **Only handlers can write to the shared region.** A member's `kv.set` always lands in their own namespace, which is what makes leaderboards trustworthy.
+- **Broadcasts are just signals.** A client that receives `rt.publish` re-runs a permission-checked render; the broadcast payload itself is never treated as state.
+
+<Note>
+`context` is granted implicitly — no need to request it. `post.read` / `post.write` / `notify` are registered but **not yet wired up**, so they can't be requested at this time.
+</Note>
