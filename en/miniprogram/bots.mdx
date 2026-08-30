@@ -65,6 +65,7 @@ Declared in `triggers` in `app.json`:
 | `post.delete` / `post.recover` | `moderate.post` | Privileged |
 | `topic.close` / `topic.tag` | `moderate.topic` | Privileged |
 | `post.pin` / `post.unpin` | `moderate.topic` | Privileged; only the app's own posts |
+| `post.lock` / `post.unlock` | `moderate.topic` | Privileged; closes a branch to replies |
 
 **Prefer `flag.create`.** It costs an ordinary scope because it ends with a person deciding; deleting costs a privileged one because it ends with somebody's post gone. An app that flags is most of the value of one that deletes, and it fails safe. Flags land in the review queue that node already has.
 
@@ -79,6 +80,10 @@ Pinning reaches **only the app's own posts**, and only inside the node it is ins
 **Why an option and not its own effect**: effects are all declared before any of them run, so a `post.pin` has no post id to name — the post it would pin does not exist until the `post.reply` in the same batch has run. "Say this, and keep it at the top" is one intention either way.
 
 A post that already exists can still be handled by id with `post.pin` / `post.unpin`.
+
+`post.lock` closes a reply, and everything nested under it, to further replies; the rest of the topic carries on. Unlike pinning it is **not** limited to the app's own posts — bringing somebody else's argument to a halt is the entire use for it — so it sits with deleting: never staff, never another moderator of this node, and never a topic's opening post, which would close the whole topic through a door marked "reply".
+
+Locks go in the same ledger, and are lifted when an admin undoes what an app did.
 
 <Note>
 A batch of effects is all or nothing. So when the `pin` is refused — a site-wide install, with no node whose moderators the bot acts as — the reply is not posted either. You never end up with a notice that was meant to stay on top sitting somewhere in the replies.
