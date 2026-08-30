@@ -64,10 +64,25 @@ Declared in `triggers` in `app.json`:
 | `flag.create` | `flag.create` | Raises a flag. A person settles it. |
 | `post.delete` / `post.recover` | `moderate.post` | Privileged |
 | `topic.close` / `topic.tag` | `moderate.topic` | Privileged |
+| `post.pin` / `post.unpin` | `moderate.topic` | Privileged; only the app's own posts |
 
 **Prefer `flag.create`.** It costs an ordinary scope because it ends with a person deciding; deleting costs a privileged one because it ends with somebody's post gone. An app that flags is most of the value of one that deletes, and it fails safe. Flags land in the review queue that node already has.
 
 `post.delete` refuses the opening post of a topic — that is closing somebody's whole thread through a door marked "post".
+
+Pinning reaches **only the app's own posts**, and only inside the node it is installed in. To say something that stays above the replies — a node's rules, a standing notice — use the `pin` option on `post.reply` rather than declaring a second `post.pin`:
+
+```js
+{ type: "post.reply", topic_id: 481, raw: "The rules here are…", pin: true }
+```
+
+**Why an option and not its own effect**: effects are all declared before any of them run, so a `post.pin` has no post id to name — the post it would pin does not exist until the `post.reply` in the same batch has run. "Say this, and keep it at the top" is one intention either way.
+
+A post that already exists can still be handled by id with `post.pin` / `post.unpin`.
+
+<Note>
+A batch of effects is all or nothing. So when the `pin` is refused — a site-wide install, with no node whose moderators the bot acts as — the reply is not posted either. You never end up with a notice that was meant to stay on top sitting somewhere in the replies.
+</Note>
 
 Everything is written to a ledger, so an admin can undo everything one app did in a single operation. Posting has a daily ceiling per app, and a second one per topic counted across every app, so two bots cannot fill a thread between them.
 
