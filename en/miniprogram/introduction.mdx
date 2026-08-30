@@ -17,7 +17,7 @@ This constraint is not a limitation — it's the reason this system can exist at
 
 |  | Where it runs | Trust level |
 |---|---|---|
-| Handlers (`render` / `onAction` / `onMessage` …) | Server-side sandbox | Trusted; the only place that can write data |
+| Handlers (`render` / `onAction` / `onTrigger` …) | Server-side sandbox | Trusted; the only place that can write data |
 | webview pages (the mini app's own HTML/JS) | User's browser | **Untrusted**; can only submit material to be verified |
 
 ## Mini app directory
@@ -38,7 +38,7 @@ Each mini app's detail page lists every permission it has been granted, so users
 
 Mini apps run in a sandbox, cannot access user accounts, and can only do what is listed in their permission list.
 
-## Two UI surfaces
+## Three shapes
 
 ### Blocks (default)
 
@@ -52,11 +52,20 @@ The mini app draws its own UI (HTML + CSS + JS) and gets a real client-side loop
 webview requires the site to enable the capability, and an admin must grant it **to each mini app individually**. To apply, declare `"surface": "webview"` in `app.json`.
 </Note>
 
+### Service (a bot)
+
+No interface at all. It renders nothing and there is nothing to press — it is woken by site events or a schedule, and speaks under an account of its own. Greeting newcomers, answering the same question for the tenth time, opening a daily thread, helping with moderation.
+
+The difference that matters most is **where it is installed**: not in a topic, but against an area. **A node's owner can install one in their own node**; installing against the whole site stays an admin's to do. A bot installed in a node can act there exactly as far as that node's moderators can, and nowhere else at all.
+
+See [Bots](/en/miniprogram/bots).
+
 ## Data model
 
 - **Per-user data region**: each member has their own isolated KV space under each installation.
 - **Shared region**: shared by everyone under the same installation (leaderboards, world state); **only handlers can write to it** — pages can never reach it.
 - **Installation as isolation**: one installation, one shared region. A mini app with a site-wide leaderboard must use the `single` placement. See [app.json and readme](/en/miniprogram/manifest).
+- **App-wide region**: shared across every install, and only handlers can write to it. This is where a list that must be the same in all fifty nodes an app runs in belongs — see [Bots](/en/miniprogram/bots#what-it-can-read).
 
 ## Becoming a developer
 

@@ -15,7 +15,9 @@ description: "小程序清单文件的字段说明、readme.md 展示规则与 p
   "scopes": ["kv"],
   "surface": "blocks",
   "placement": "single",
-  "triggers": []
+  "triggers": [],
+  "domains": [],
+  "settings": []
 }
 ```
 
@@ -25,9 +27,11 @@ description: "小程序清单文件的字段说明、readme.md 展示规则与 p
 | `name` | 是 | 目录里显示的名字 |
 | `entry` | 是 | 打包入口文件 |
 | `scopes` | 否 | 申请的权限，见[权限与数据](/miniprogram/handlers#权限与数据) |
-| `surface` | 否 | `blocks`（默认）或 `webview`（需管理员单独授予） |
+| `surface` | 否 | `blocks`（默认）、`webview`（需管理员单独授予）或 `service`（[机器人](/miniprogram/bots)，没有界面） |
 | `placement` | 否 | `single`（默认）或 `many`，见下文 |
-| `triggers` | 否 | 订阅的站点事件：`post_created`、`topic_created`、`post_liked` |
+| `triggers` | 否 | 订阅的站点事件，见[机器人](/miniprogram/bots#被什么唤醒) |
+| `domains` | 否 | 允许访问的精确主机名，逐个送审，见[机器人](/miniprogram/bots#访问外部服务) |
+| `settings` | 否 | 安装时要问的字段，见下文 |
 
 平台只读取上面这些字段，其余内容不会被上传。
 
@@ -40,6 +44,38 @@ description: "小程序清单文件的字段说明、readme.md 展示规则与 p
 
 <Warning>
 **每个安装有各自独立的共享区。** 有全站排行榜的小程序必须是 `single`——投放到两处就等于把榜劈成两半。
+</Warning>
+
+**它对节点安装同样生效。** 声明 `single` 的小程序全站只能存在于一处——一个帖子或一个节点，第二处一律拒绝。给节点主装的[机器人](/miniprogram/bots)几乎总是 `many`：每个节点各留自己的问候记录、自己的规则、自己的待办提醒。只有当整个小程序的意义就是「一份共享的东西」时才用 `single`，而且先考虑 `kv.app`——它跨安装共享，能让 `many` 变得安全。
+
+## settings：安装时要问什么
+
+需要被告知点什么的小程序——一个接口地址、一把密钥、一个分类——把字段声明出来，安装表单据此渲染：
+
+```json
+{
+  "settings": [
+    { "key": "endpoint",
+      "label": { "en": "API endpoint", "zh_CN": "API 地址" },
+      "type": "url", "required": true,
+      "description": { "zh_CN": "字段下方显示的说明。" } },
+    { "key": "api_key", "label": "API 密钥", "type": "secret", "required": true },
+    { "key": "action", "type": "enum", "options": ["flag", "off"], "default": "flag" },
+    { "key": "watch", "type": "boolean", "default": false }
+  ]
+}
+```
+
+类型：`string` `text` `secret` `url` `integer` `boolean` `enum`，最多 20 个字段。`url` 只接受 https，`enum` 必须给 `options`。
+
+填好的值作为 `ctx.config` 交给 handler。不声明 `settings` 也行，`ctx.config` 就是管理员手工填进去的东西。
+
+<Note>
+**`label` 和 `description` 可以按语言写。** 读这张表的是节点主——在一个不讲英文的论坛上摆一排英文字段，等于一张没人填得下去的表。回退顺序是：精确匹配 → 同语言的其他地区写法 → 英文。
+</Note>
+
+<Warning>
+**`secret` 类型的值永远不会回传给浏览器**，包括填它的那个人的浏览器。表单显示「已设置」，留空即保持不变——一个显示不了值的表单，不能把「空」读成「清除」。
 </Warning>
 
 ## readme.md

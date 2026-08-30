@@ -93,6 +93,7 @@
                   "miniprogram/quickstart",
                   "miniprogram/manifest",
                   "miniprogram/handlers",
+                  "miniprogram/bots",
                   "miniprogram/blocks",
                   "miniprogram/publishing"
                 ]
@@ -184,6 +185,7 @@
                   "en/miniprogram/quickstart",
                   "en/miniprogram/manifest",
                   "en/miniprogram/handlers",
+                  "en/miniprogram/bots",
                   "en/miniprogram/blocks",
                   "en/miniprogram/publishing"
                 ]
@@ -236,15 +238,15 @@
   },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {

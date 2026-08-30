@@ -24,6 +24,12 @@ For a mini app with `placement` set to `many`, any member can place it into thei
 
 **Upgrading to the latest approved version**: place it again in the original topic.
 
+## Installing in a node
+
+A [bot](/en/miniprogram/bots) has no interface, so it is not placed in a topic — it is installed against an area. **A node's owner can install one in their own node** without asking an admin: press **Install** on the app's detail page, pick the node, and fill in whatever the app declared. Installing against the whole site stays an admin's to do.
+
+After that it is managed at [/apps/nodes](https://www.nodeloc.com/apps/nodes): change its settings, or stop it. Stopping only makes it quiet — what it stored stays where it is.
+
 ## Quotas and limits
 
 |  | Limit |
@@ -40,7 +46,22 @@ For a mini app with `placement` set to `many`, any member can place it into thei
     Wait for the review result, or ask a reviewer to reject it first.
   </Accordion>
   <Accordion title="fetch fails inside the sandbox">
-    The sandbox has no network access — that's by design. Mini apps that need external data can't be built right now.
+    The sandbox has no network access — that's by design, and it will not change. To reach an outside service, return an `http.fetch` effect: the site makes the request and the answer arrives as a separate `onFetch` invocation. See [Bots](/en/miniprogram/bots#reaching-outside).
+  </Accordion>
+  <Accordion title="E_HTTP_DOMAIN_DENIED">
+    That host is not on this app's approved list. Request it in `domains` in `app.json` and submit again. Exact hostnames only — no wildcards, no scheme, no path.
+  </Accordion>
+  <Accordion title="E_SCOPE_UNAVAILABLE">
+    The site has that capability switched off entirely, regardless of what your app was granted. Ask an admin.
+  </Accordion>
+  <Accordion title="E_MOD_OUT_OF_SCOPE / E_MOD_DENIED / E_MOD_PROTECTED">
+    In order: acting outside where the app was installed; the app's own account has no such power there; and the target is staff or one of that node's moderators, which is always refused.
+  </Accordion>
+  <Accordion title="E_POST_QUOTA / E_POST_TOPIC_QUOTA">
+    This app has spent its posts for the day, or this topic has taken its day's bot posts — the second is counted across every app together.
+  </Accordion>
+  <Accordion title="The bot is installed but never does anything">
+    A bot that only works on a schedule must export `onInstall` and register its first `schedule.add` there, or `onSchedule` never fires. Also check the events line up: a topic's first post arrives as `topic_created`, never as `post_created`.
   </Accordion>
   <Accordion title="Not signed in. Run nodeloc-apps login first.">
     You're not logged in, or you switched machines. Run `nodeloc-apps login`.
@@ -61,6 +82,6 @@ For a mini app with `placement` set to `many`, any member can place it into thei
     Page JS is injected as source, not a closure, so module-level constants must be injected too. See [Writing handlers](/en/miniprogram/handlers).
   </Accordion>
   <Accordion title="The mini app can only be placed in one location">
-    Your `placement` is `single`. If you truly need multiple locations, change it to `many` — but think through the fact that the shared region will be split.
+    Your `placement` is `single` — which holds for nodes as well as topics. If you truly need multiple locations, change it to `many`, but think through the fact that the shared region will be split; use `kv.app` for anything that has to be shared across installs.
   </Accordion>
 </AccordionGroup>

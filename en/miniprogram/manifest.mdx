@@ -15,7 +15,9 @@ The `app.json` in the project root is the only config file the platform reads:
   "scopes": ["kv"],
   "surface": "blocks",
   "placement": "single",
-  "triggers": []
+  "triggers": [],
+  "domains": [],
+  "settings": []
 }
 ```
 
@@ -25,9 +27,11 @@ The `app.json` in the project root is the only config file the platform reads:
 | `name` | Yes | Name shown in the directory |
 | `entry` | Yes | Entry file for bundling |
 | `scopes` | No | Requested permissions; see [Permissions and data](/en/miniprogram/handlers#权限与数据) |
-| `surface` | No | `blocks` (default) or `webview` (requires a separate admin grant) |
+| `surface` | No | `blocks` (default), `webview` (requires a separate admin grant), or `service` (a [bot](/en/miniprogram/bots), with no interface) |
 | `placement` | No | `single` (default) or `many`; see below |
-| `triggers` | No | Subscribed site events: `post_created`, `topic_created`, `post_liked` |
+| `triggers` | No | Subscribed site events; see [Bots](/en/miniprogram/bots#what-wakes-it) |
+| `domains` | No | Exact hostnames the app may reach, approved one at a time; see [Bots](/en/miniprogram/bots#reaching-outside) |
+| `settings` | No | What the install form asks for; see below |
 
 The platform only reads the fields above; anything else is not uploaded.
 
@@ -40,6 +44,38 @@ The platform only reads the fields above; anything else is not uploaded.
 
 <Warning>
 **Each installation has its own independent shared region.** A mini app with a site-wide leaderboard must be `single` — placing it in two locations splits the leaderboard in half.
+</Warning>
+
+**It governs nodes too.** A `single` app can exist in one place — one post or one node — and a second anywhere is refused. A [bot](/en/miniprogram/bots) meant for node owners to install is almost always `many`: each node keeps its own greeting log, its own rules, its own pending reminders. Use `single` only when the whole point of the app is one shared thing, and reach for `kv.app` first — it shares across installs and makes `many` safe.
+
+## settings: what to ask at install time
+
+An app that needs to be told something — an endpoint, a key, a category — declares the fields, and the install form renders them:
+
+```json
+{
+  "settings": [
+    { "key": "endpoint",
+      "label": { "en": "API endpoint", "zh_CN": "API 地址" },
+      "type": "url", "required": true,
+      "description": { "en": "Shown under the field." } },
+    { "key": "api_key", "label": "API key", "type": "secret", "required": true },
+    { "key": "action", "type": "enum", "options": ["flag", "off"], "default": "flag" },
+    { "key": "watch", "type": "boolean", "default": false }
+  ]
+}
+```
+
+Types: `string` `text` `secret` `url` `integer` `boolean` `enum`, at most 20 fields. `url` accepts https only; `enum` needs `options`.
+
+Whatever is filled in arrives as `ctx.config`. Declare nothing and `ctx.config` is whatever an admin put there by hand.
+
+<Note>
+**`label` and `description` may be written per locale.** Node owners are the audience for this form, and a form of English fields on a forum that does not speak English is a form nobody can fill in. Fallback runs exact, then the same language written for anywhere else, then English.
+</Note>
+
+<Warning>
+**A `secret` is never sent back to a browser** — not even the browser of the person who typed it. The form shows it as already set, and leaving it blank keeps it: a form that cannot show a value must not read blank as "clear it".
 </Warning>
 
 ## readme.md

@@ -24,6 +24,12 @@ nodeloc-apps upload --note "说清这版改了什么"
 
 **升级到最新已批准版本**的方式：在原帖上再投放一次。
 
+## 装到节点
+
+没有界面的[机器人](/miniprogram/bots)不进帖子，而是装到一个范围上。**节点主可以自己把它装进自己的节点**——在小程序详情页点「安装」，选节点，填好它声明的设置。装到全站则是管理员的事。
+
+装好之后在 [/apps/nodes](https://www.nodeloc.com/apps/nodes) 管理：改设置、停用。停用只是让它闭嘴，它存下来的东西还在。
+
 ## 配额与限制
 
 |  | 上限 |
@@ -40,7 +46,22 @@ nodeloc-apps upload --note "说清这版改了什么"
     等审核结果，或让审核员先驳回。
   </Accordion>
   <Accordion title="沙箱里 fetch 失败">
-    沙箱没有网络，这是设计。需要外部数据的小程序现在做不了。
+    沙箱没有网络，这是设计，将来也不会变。要访问外部服务，返回一个 `http.fetch` effect，由站点代为请求，结果作为一次单独的 `onFetch` 调用送回来。见[机器人](/miniprogram/bots#访问外部服务)。
+  </Accordion>
+  <Accordion title="E_HTTP_DOMAIN_DENIED">
+    那个主机不在这个小程序已批准的域名列表里。在 `app.json` 的 `domains` 里申请，重新提交审核。只能写精确主机名，不能用通配符、协议或路径。
+  </Accordion>
+  <Accordion title="E_SCOPE_UNAVAILABLE">
+    站点把这项能力整个关掉了，跟你的小程序被批准了什么无关，找管理员。
+  </Accordion>
+  <Accordion title="E_MOD_OUT_OF_SCOPE / E_MOD_DENIED / E_MOD_PROTECTED">
+    分别是：动到了安装范围之外、机器人账号本身在那里没有权限、以及对象是 staff 或本节点的版主（这条永远拒绝）。
+  </Accordion>
+  <Accordion title="E_POST_QUOTA / E_POST_TOPIC_QUOTA">
+    这个小程序今天的发帖额度用完了，或者这个主题今天的机器人发帖额度用完了（后者跨所有小程序合计）。
+  </Accordion>
+  <Accordion title="机器人装上了但一直不动">
+    只靠定时任务干活的机器人必须导出 `onInstall` 并在里面注册第一个 `schedule.add`，否则 `onSchedule` 永远不会被触发。另外确认订阅的事件对得上：主题的首帖只发 `topic_created`，不发 `post_created`。
   </Accordion>
   <Accordion title="Not signed in. Run nodeloc-apps login first.">
     没登录，或换了机器。跑一次 `nodeloc-apps login`。
@@ -61,6 +82,6 @@ nodeloc-apps upload --note "说清这版改了什么"
     页面 JS 是源码注入、不是闭包，模块级常量要一并注入。见[编写 handler](/miniprogram/handlers)。
   </Accordion>
   <Accordion title="小程序只能投放到一处">
-    你的 `placement` 是 `single`。确实需要多处就改成 `many`，但先想清楚共享区会被劈开。
+    你的 `placement` 是 `single`——这对帖子和节点同样生效。确实需要多处就改成 `many`，但先想清楚共享区会被劈开；跨安装要共享的东西用 `kv.app`。
   </Accordion>
 </AccordionGroup>

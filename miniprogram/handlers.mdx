@@ -100,10 +100,26 @@ export async function onMessage(ctx, api) {
 
 | handler | 触发时机 |
 |---|---|
-| `onTrigger(ctx, api)` | `triggers` 里声明的站点事件（`post_created`、`topic_created`、`post_liked`） |
+| `onTrigger(ctx, api)` | `triggers` 里声明的站点事件 |
 | `onSchedule(ctx, api)` | `schedule.add` 登记的定时任务 |
+| `onFetch(ctx, api)` | 你声明的某次 `http.fetch` 有结果了 |
+| `onInstall(ctx, api)` | 小程序被装上去的那一刻，跑一次 |
 
-两者都以小程序自己的机器人账号运行，**读不到任何成员的私有数据**。
+四者都以小程序自己的机器人账号运行，**读不到任何成员的私有数据**。它们的读写都落在小程序的共享区，所以后台运行里 `api.kv.get` 读回来的就是上一次后台运行存进去的东西。
+
+后台调用的 `ctx` 长这样：
+
+```json
+{
+  "background": true, "install_id": 12, "config": {},
+  "event": "post_created",
+  "data": { "topic_id": 481, "post_id": 1902, "user_id": 7, "author_id": 7 },
+  "job_key": "daily", "payload": {},
+  "request_id": "weather", "ok": true, "status": 200, "body": "..."
+}
+```
+
+没有界面、只靠这些 handler 干活的小程序叫 **service**，详见[机器人](/miniprogram/bots)。
 
 ## 权限与数据
 
@@ -112,8 +128,11 @@ export async function onMessage(ctx, api) {
 | 调用 | 内容 | 需要 scope |
 |---|---|---|
 | `api.kv.get(key)` / `api.kv.list()` | 当前成员在本安装下的数据 | `kv` |
-| `api.kv.listPublic()` | 共享区 | `kv.shared` |
+| `api.kv.listPublic()` | 共享区（本安装） | `kv.shared` |
+| `api.kv.app.get(key)` | 整个小程序的记忆，跨所有安装 | `kv.app` |
 | `api.points.balance()` | 积分余额 | `points` |
+| `api.post.get(id)` / `api.topic.get(id)` | 本次调用所关于的帖子和主题 | `post.read` |
+| `api.post.recentByUser(id)` | 那个人最近的帖子，限于小程序够得着的范围 | `post.read` |
 
 写（返回 `effects`，逐条校验后在一个事务里提交）：
 
@@ -125,12 +144,34 @@ export async function onMessage(ctx, api) {
 | `points.award` | `points` |
 | `rt.publish` | `realtime` |
 | `schedule.add` / `schedule.cancel` | `schedule` |
+| `kv.app.set` / `kv.app.delete` | `kv.app` |
+| `notify.user` | `notify` |
+| `http.fetch` | `http` |
+| `post.create` / `post.reply` | `post.write` |
+| `flag.create` | `flag.create` |
+| `post.delete` / `post.recover` | `moderate.post` |
+| `topic.close` / `topic.tag` | `moderate.topic` |
 
-两条要记住的：
+四条要记住的：
 
 - **共享区只有 handler 写得进去。** 成员的 `kv.set` 永远只落到自己的命名空间，排行榜因此可信。
 - **广播只是信号。** 收到 `rt.publish` 的客户端会重新走一次带权限校验的渲染，广播内容本身从不被当作状态。
+- **`api.post.get` 只对本次调用相关的帖子有答案**，其他 id 一律返回 `null`。预取正是装在一个角落里的小程序读不到整站的原因。
+- **`kv.app` 不能被枚举。** 它只对本次调用涉及的人作答，因为真实站点上这块区域是一张几万行的查找表，整份交出去等于把它塞进每一次调用的内存里。
 
 <Note>
-`context` 是隐式授予的，不用申请。`post.read` / `post.write` / `notify` 已登记但**尚未接通**，现在申请不到。
+`context` 是隐式授予的，不用申请。`post.write`、`moderate.post`、`moderate.topic`、`webview` 是**特权权限**：只有管理员能授予，而且各自还对应一个必须打开的站点设置。发帖和处置内容的详细规则见[机器人](/miniprogram/bots)。
 </Note>
+
+## 用读者的语言说话
+
+`ctx.locale` 是论坛自己的语言。你读到的帖子上的 `post.locale` 是那位成员的。用哪个，取决于你写的东西给谁看：
+
+| 内容 | 用谁的语言 |
+|---|---|
+| 主题里所有人都会读到的帖子 | `ctx.locale` |
+| 回复某一个人——问候、提醒 | `post.locale`，退到 `ctx.locale` |
+| 旗标 | `ctx.locale`——读它的是版主 |
+| 发给模型的提示词 | 都不用，固定一种语言 |
+
+回退顺序：精确匹配 → 同语言的其他地区写法 → 英文。写了 `zh_CN` 的小程序不该让 `zh_TW` 读者看到英文——简体离他们读的东西比英文近得多。

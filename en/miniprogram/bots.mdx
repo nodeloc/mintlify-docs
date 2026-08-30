@@ -1,0 +1,141 @@
+---
+title: "Bots (service apps)"
+description: "Apps with no interface: installed in a node to help moderate, woken by site events, speaking under their own account, reaching approved outside services"
+---
+
+An app with `surface: "service"` has no interface. It renders nothing and there is nothing to press — it is woken by site events or a schedule, and speaks under an account of its own. This is what greeting newcomers, answering the same question for the tenth time, opening a daily thread and helping with moderation are made of.
+
+## Where it is installed
+
+An ordinary app goes inside a post. A bot is installed against an **area**:
+
+| Installed against | Who may | What it can reach |
+|---|---|---|
+| One node | That node's **owner**, or anyone moderating it | That node and its subcategories, and nothing else |
+| The whole site | Admins only | The public site (private messages are always out of reach) |
+
+A node owner presses **Install** on the app's own page, picks their node, and fills in whatever it asked for. After that it is managed at [/apps/nodes](https://www.nodeloc.com/apps/nodes).
+
+## Its powers are that node's moderators' powers
+
+A bot installed in a node has its account **added to that node's moderation group**.
+
+That one line is the whole permission model. From there core's own category-scoped checks decide what it may do — it can act in that node exactly as far as that node's moderators can, and can do nothing at all in any other node. Not because of a check written for bots, but because it is not in anybody else's group.
+
+<Warning>
+**A bot can never act on staff, or on anyone who moderates the node.** This is enforced by the platform rather than left to each author to remember. It also stops an app turning on itself, or on another app moderating the same node.
+</Warning>
+
+## What wakes it
+
+Declared in `triggers` in `app.json`:
+
+| Event | When |
+|---|---|
+| `topic_created` | Somebody opened a topic |
+| `post_created` | Somebody replied |
+| `post_edited` | Somebody edited a post |
+| `post_liked` | Somebody liked a post |
+| `user_created` | A new member joined (only a site-wide install hears this — it belongs to no topic) |
+| `post_flagged` | Somebody raised a flag on a post |
+
+<Warning>
+**A topic's first post arrives as `topic_created`, never as `post_created`.** The two do not both fire for it. An app that wants opening posts *and* replies has to subscribe to both — subscribing to `post_created` alone silently misses every opening post on the forum, with nothing in the logs to say so.
+</Warning>
+
+`post_flagged` is the proper way in for an app that helps moderate: a member decided something was worth looking at, and the app is asked to help with what they raised rather than going looking on its own. Its payload separates **who flagged** from **who was flagged**.
+
+## Speaking, and acting
+
+| Effect | Scope | |
+|---|---|---|
+| `post.create` / `post.reply` | `post.write` | Privileged, granted per app by an admin |
+| `notify.user` | `notify` | Only the member whose action woke this run |
+| `flag.create` | `flag.create` | Raises a flag. A person settles it. |
+| `post.delete` / `post.recover` | `moderate.post` | Privileged |
+| `topic.close` / `topic.tag` | `moderate.topic` | Privileged |
+
+**Prefer `flag.create`.** It costs an ordinary scope because it ends with a person deciding; deleting costs a privileged one because it ends with somebody's post gone. An app that flags is most of the value of one that deletes, and it fails safe. Flags land in the review queue that node already has.
+
+`post.delete` refuses the opening post of a topic — that is closing somebody's whole thread through a door marked "post".
+
+Everything is written to a ledger, so an admin can undo everything one app did in a single operation. Posting has a daily ceiling per app, and a second one per topic counted across every app, so two bots cannot fill a thread between them.
+
+## What it can read
+
+| Call | What | Scope |
+|---|---|---|
+| `api.post.get(id)` / `api.topic.get(id)` | The post and topic that woke it | `post.read` |
+| `api.post.recentByUser(id)` | That person's recent posts, within the bot's reach | `post.read` |
+| `api.kv.app.get(key)` | What the whole app knows, across every node it runs in | `kv.app` |
+
+All three answer **only for the people this invocation is about** — whoever acted, whoever wrote the post, whoever was reported. Asking after a stranger returns `null`, not an error.
+
+`api.kv.app` is worth a paragraph of its own. `kv.shared` belongs to **one install**: right for a leaderboard, useless for a list of judged accounts, which has to be the same in all fifty nodes an app runs in. `kv.app` is that list. It **cannot be enumerated**, because on a real site the area is a lookup table with tens of thousands of rows, and handing it over whole on every post would put that list in memory every time anybody writes anything.
+
+## Reaching outside
+
+The sandbox has no network and will not get one. To reach an outside service, a handler returns an `http.fetch` effect — the **site** makes the request, and the answer arrives as a separate `onFetch` invocation:
+
+```js
+export async function onTrigger(ctx, api) {
+  return {
+    effects: [
+      // Where to reply is written down now: the run that receives the answer
+      // is a different one and knows nothing about this one.
+      { type: "kv.set", key: "asked:weather", value: { topic_id: ctx.data.topic_id } },
+      {
+        type: "http.fetch",
+        request_id: "weather",
+        url: "https://api.example.com/now",
+        method: "GET",
+        headers: { authorization: `Bearer ${ctx.config.api_key}` },
+      },
+    ],
+  };
+}
+
+export async function onFetch(ctx, api) {
+  const asked = await api.kv.get(`asked:${ctx.request_id}`);
+  if (!ctx.ok || ctx.status !== 200) {
+    return { effects: [{ type: "kv.delete", key: `asked:${ctx.request_id}` }] };
+  }
+  // ctx.body holds the response
+}
+```
+
+The rules:
+
+- **https only**
+- Only **exact hostnames** a reviewer approved for this app, one at a time — no wildcards, no scheme, no path. Requested in `domains` in `app.json`.
+- The address is checked before connecting, so an approved hostname cannot be pointed at a private network
+- Redirects are not followed — where they lead was never reviewed
+- The response is capped, and requests have a timeout and a daily limit
+
+<Note>
+Credentials such as an API key belong in the **install's settings**, filled in by whoever installs it — never in the bundle a reviewer reads. See [app.json and readme](/en/miniprogram/manifest#settings-what-to-ask-at-install-time).
+</Note>
+
+## Working on a schedule
+
+A bot that only works on a schedule **must export `onInstall`**. `onSchedule` fires for a job that already exists, and a job only exists because an effect asked for one — so without registering the first `schedule.add` in `onInstall`, it never starts at all.
+
+```js
+export async function onInstall(ctx) {
+  return {
+    effects: [
+      { type: "schedule.add", job_key: "daily", in_seconds: 60, every_seconds: 86400 },
+    ],
+  };
+}
+```
+
+`onInstall` runs again on every re-install and every playtest push, so what it does must be idempotent. `schedule.add` is: it is keyed by `job_key` and rewritten in place.
+
+## Building one
+
+```bash
+nodeloc-apps init my-bot --template bot
+```
+
+In a playtest a bot hears **only about its own author's actions** — otherwise unreviewed code would see every post on the forum. `post.write` is validated in full and then thrown away: you can see what it would have posted, and it posts nothing.

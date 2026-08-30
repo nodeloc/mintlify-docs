@@ -32,7 +32,7 @@ Mini apps run inside topics. Click "Open" on the detail page to jump to the topi
 - Game scores are verified server-side before entering the leaderboard — the numbers shown on the page don't count, so the rankings are authentic and trustworthy.
 - There's a normal discussion area right below the mini app, so you can reply and chat after playing.
 
-## Two Interface Types
+## Three Shapes
 
 | Type | Description | Examples |
 | --- | --- | --- |
@@ -42,6 +42,33 @@ Mini apps run inside topics. Click "Open" on the detail page to jump to the topi
 <Frame>
   <img src="/images/screenshots/en/miniprogram-blocks.png" alt="Carpool Assistant mini app built with native components" />
 </Frame>
+| Bot | No interface; installed into a node to do a job | Greeting newcomers, answering FAQs, a daily thread |
+
+
+## Installing a Bot in Your Own Node
+
+A bot is not placed in a topic — it is installed against an area. **If you run a node, you can install one yourself**, without asking an admin.
+
+<Steps>
+  <Step title="Pick one">
+    Find the bot in the [mini app directory](https://www.nodeloc.com/apps) and open its page.
+  </Step>
+  <Step title="Press Install">
+    Choose which of your nodes it goes into.
+  </Step>
+  <Step title="Tell it what it needs">
+    Some bots need to be told something — a category, a greeting, an API key. The form explains each field.
+  </Step>
+  <Step title="Manage it afterwards">
+    [/apps/nodes](https://www.nodeloc.com/apps/nodes) lists your nodes and the bots running in each. Change the settings or stop one at any time. Stopping only makes it quiet — what it stored stays where it is.
+  </Step>
+</Steps>
+
+What it can do in your node is **exactly what your node's moderators can do**, and no more. In somebody else's node it can do nothing at all. It can never act on staff or on your node's moderators — that is enforced by the platform, not chosen by the bot.
+
+<Note>
+A bot speaks under an account of its own, named starting with `app_` and carrying the "App accounts" group flair, so it reads as software rather than a person.
+</Note>
 
 ## Adding a Mini App to Your Own Topic
 

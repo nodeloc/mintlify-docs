@@ -100,10 +100,26 @@ The JS in the page is injected as a **source string**, not a closure. Any module
 
 | Handler | When it fires |
 |---|---|
-| `onTrigger(ctx, api)` | Site events declared in `triggers` (`post_created`, `topic_created`, `post_liked`) |
+| `onTrigger(ctx, api)` | Site events declared in `triggers` |
 | `onSchedule(ctx, api)` | Scheduled tasks registered via `schedule.add` |
+| `onFetch(ctx, api)` | An `http.fetch` the app declared has come back |
+| `onInstall(ctx, api)` | The app is put to work, once per install |
 
-Both run as the mini app's own bot account and **cannot read any member's private data**.
+All four run as the mini app's own bot account and **cannot read any member's private data**. Their reads and writes address the app's shared region, so `api.kv.get` in a background run reads back what a background run stored.
+
+A background `ctx` looks like this:
+
+```json
+{
+  "background": true, "install_id": 12, "config": {},
+  "event": "post_created",
+  "data": { "topic_id": 481, "post_id": 1902, "user_id": 7, "author_id": 7 },
+  "job_key": "daily", "payload": {},
+  "request_id": "weather", "ok": true, "status": 200, "body": "..."
+}
+```
+
+An app with no interface, built entirely around these, is a **service** app — see [Bots](/en/miniprogram/bots).
 
 ## Permissions and data
 
@@ -112,8 +128,11 @@ Reads (via `api`, all require `await`; data is prefetched by the platform before
 | Call | Contents | Required scope |
 |---|---|---|
 | `api.kv.get(key)` / `api.kv.list()` | The current member's data under this installation | `kv` |
-| `api.kv.listPublic()` | Shared region | `kv.shared` |
+| `api.kv.listPublic()` | Shared region (this install) | `kv.shared` |
+| `api.kv.app.get(key)` | What the whole app knows, across every install | `kv.app` |
 | `api.points.balance()` | Points balance | `points` |
+| `api.post.get(id)` / `api.topic.get(id)` | The post and topic this invocation is about | `post.read` |
+| `api.post.recentByUser(id)` | That person's recent posts, within the app's reach | `post.read` |
 
 Writes (return `effects`; each is validated and committed in a single transaction):
 
@@ -125,12 +144,34 @@ Writes (return `effects`; each is validated and committed in a single transactio
 | `points.award` | `points` |
 | `rt.publish` | `realtime` |
 | `schedule.add` / `schedule.cancel` | `schedule` |
+| `kv.app.set` / `kv.app.delete` | `kv.app` |
+| `notify.user` | `notify` |
+| `http.fetch` | `http` |
+| `post.create` / `post.reply` | `post.write` |
+| `flag.create` | `flag.create` |
+| `post.delete` / `post.recover` | `moderate.post` |
+| `topic.close` / `topic.tag` | `moderate.topic` |
 
-Two things to remember:
+Four things to remember:
 
 - **Only handlers can write to the shared region.** A member's `kv.set` always lands in their own namespace, which is what makes leaderboards trustworthy.
 - **Broadcasts are just signals.** A client that receives `rt.publish` re-runs a permission-checked render; the broadcast payload itself is never treated as state.
+- **`api.post.get` answers only for the post this invocation is about**, and `null` for any other id. Prefetching is what stops an app installed in one corner reading across the site.
+- **`kv.app` cannot be enumerated.** It answers only for the people this invocation is about, because on a real site the area is a lookup table with tens of thousands of rows — handing it over whole would put that list in memory on every post anybody writes.
 
 <Note>
-`context` is granted implicitly — no need to request it. `post.read` / `post.write` / `notify` are registered but **not yet wired up**, so they can't be requested at this time.
+`context` is granted implicitly — no need to request it. `post.write`, `moderate.post`, `moderate.topic` and `webview` are **privileged**: only an admin grants them, and each has a site setting that has to be on as well. The rules for posting and acting on content are in [Bots](/en/miniprogram/bots).
 </Note>
+
+## Saying it in the reader's language
+
+`ctx.locale` is the forum's own language. `post.locale`, on a post you read, is that member's. Which to use follows from who reads what you write:
+
+| What | Whose language |
+|---|---|
+| A post everybody in the topic reads | `ctx.locale` |
+| A reply to one person — a greeting, a reminder | `post.locale`, then `ctx.locale` |
+| A flag | `ctx.locale` — moderators read it |
+| A prompt sent to a model | neither; keep it in one language |
+
+Fallback runs exact, then the same language written for anywhere else, then English. An app that wrote `zh_CN` should not leave a `zh_TW` reader with English — Simplified is much closer to what they read than that.

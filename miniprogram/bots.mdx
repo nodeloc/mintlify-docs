@@ -1,0 +1,140 @@
+---
+title: "机器人（service）"
+description: "没有界面的小程序：装到节点里辅助管理、订阅站点事件、以自己的账号发言、访问外部服务"
+---
+
+`surface: "service"` 的小程序没有界面。它不渲染任何东西，也没有可点的按钮——由站点事件或定时任务唤醒，以自己的账号说话。这是给欢迎新人、自动回答常见问题、定时开话题、协助审核这类事情用的。
+
+## 它装在哪
+
+普通小程序嵌进一个帖子。机器人装到一个**范围**上：
+
+| 装到 | 谁能装 | 它够得着哪里 |
+|---|---|---|
+| 一个节点 | 该节点的**节点主**，或该节点的版主 | 只有这个节点及其子分类 |
+| 全站 | 只有管理员 | 全站公开区域（私信永远够不着） |
+
+节点主在小程序详情页点「安装」，选自己的节点，填好它要的设置即可。装好之后在 [/apps/nodes](https://www.nodeloc.com/apps/nodes) 管理。
+
+## 权限就是那个节点版主的权限
+
+装到节点里的机器人，它的账号会**加入该节点的版主组**。
+
+这一句就是全部的权限模型。之后由 Discourse 核心自己的分类级判断决定它能做什么——它在这个节点里的权限恰好等于这个节点版主的权限，在别的节点里什么都做不了。不是因为哪里写了一条检查，而是因为它不在别人的组里。
+
+<Warning>
+**机器人永远动不了 staff，也动不了本节点的版主。** 这条由平台强制，不是小程序自己的选择，作者写不写都一样。它也因此不能对付自己或同节点的另一个机器人。
+</Warning>
+
+## 被什么唤醒
+
+在 `app.json` 的 `triggers` 里声明：
+
+| 事件 | 什么时候 |
+|---|---|
+| `topic_created` | 有人开了新主题 |
+| `post_created` | 有人回帖 |
+| `post_edited` | 有人改了帖子 |
+| `post_liked` | 有人点赞 |
+| `user_created` | 新成员注册（只有装到全站的才收得到，因为它不属于任何主题） |
+| `post_flagged` | 有人举报了某个帖子 |
+
+<Warning>
+**主题的首帖只发 `topic_created`，不发 `post_created`。** 两者不会同时触发。想同时听开帖和回帖，两个都要订阅——只写 `post_created` 会安静地漏掉站上所有的开帖，而且没有任何报错。
+</Warning>
+
+`post_flagged` 是协助审核的正规入口：判断「这东西值得看一眼」是成员做的，机器人是被请来帮忙处理，而不是自己四处巡逻。它的载荷区分**举报者**和**被举报者**。
+
+## 说话与处置
+
+| effect | 需要 scope | |
+|---|---|---|
+| `post.create` / `post.reply` | `post.write` | 特权，管理员单独授予 |
+| `notify.user` | `notify` | 只能通知唤醒这次运行的那个人 |
+| `flag.create` | `flag.create` | 打旗标，交给人判断 |
+| `post.delete` / `post.recover` | `moderate.post` | 特权 |
+| `topic.close` / `topic.tag` | `moderate.topic` | 特权 |
+
+**优先用 `flag.create`。** 它只要普通权限，因为它的终点是人做决定；删帖要特权，因为它的终点是某人的帖子没了。会打旗标的机器人已经拿到了会删帖的机器人的大部分价值，而且失败方向是安全的。旗标进的是这个节点本来就有的审核队列。
+
+`post.delete` 不会删主题的首帖——那是从「帖子」这道门把别人整个主题端掉。
+
+所有动作都记账，管理员可以一次性撤销一个小程序做过的全部事情。发帖有每日上限，同一主题还有一条跨所有小程序合计的上限，两个机器人因此不可能互相把一个帖子刷满。
+
+## 读得到什么
+
+| 调用 | 内容 | 需要 scope |
+|---|---|---|
+| `api.post.get(id)` / `api.topic.get(id)` | 唤醒它的那个帖子和主题 | `post.read` |
+| `api.post.recentByUser(id)` | 那个人最近的帖子，限于机器人够得着的范围 | `post.read` |
+| `api.kv.app.get(key)` | 整个小程序的记忆，跨它运行的所有节点 | `kv.app` |
+
+这三个都**只对本次调用涉及的人**作答——谁动的手、谁写的帖、谁被举报。问一个陌生人返回 `null`，不是报错。
+
+`api.kv.app` 值得单独说：`kv.shared` 属于**单个安装**，这对排行榜是对的，对「已判定账号名单」则毫无用处——那份名单必须在它运行的每个节点里都是同一份。`kv.app` 就是这个。它**不能被枚举**，因为真实站点上这块区域是一张几万行的查找表，每有人发帖就整份交出去，等于把它塞进每一次调用的内存里。
+
+## 访问外部服务
+
+沙箱没有网络，将来也不会有。要访问外部服务，handler 返回一个 `http.fetch` effect——请求由**站点**代为发出，结果作为一次单独的 `onFetch` 调用送回来：
+
+```js
+export async function onTrigger(ctx, api) {
+  return {
+    effects: [
+      // 回复到哪里现在就写下来：收到答案的是另一次运行，它对这一次一无所知。
+      { type: "kv.set", key: "asked:weather", value: { topic_id: ctx.data.topic_id } },
+      {
+        type: "http.fetch",
+        request_id: "weather",
+        url: "https://api.example.com/now",
+        method: "GET",
+        headers: { authorization: `Bearer ${ctx.config.api_key}` },
+      },
+    ],
+  };
+}
+
+export async function onFetch(ctx, api) {
+  const asked = await api.kv.get(`asked:${ctx.request_id}`);
+  if (!ctx.ok || ctx.status !== 200) {
+    return { effects: [{ type: "kv.delete", key: `asked:${ctx.request_id}` }] };
+  }
+  // ctx.body 里是响应正文
+}
+```
+
+约束：
+
+- 只允许 **https**
+- 只允许审核给这个小程序**逐个批准过的精确主机名**（不能用通配符、协议、路径），在 `app.json` 的 `domains` 里申请
+- 目标地址在连接前会被核对，指向内网的主机名连不出去
+- 重定向不跟随——它指向的地址没经过审核
+- 响应有大小上限，请求有超时和每日次数上限
+
+<Note>
+API key 之类的凭据放在**安装的设置**里（由装它的人填），不要写进审核员会读到的代码里。见 [app.json 与 readme](/miniprogram/manifest#settings-安装时要问什么)。
+</Note>
+
+## 定时干活
+
+只靠定时任务干活的机器人**必须导出 `onInstall`**：`onSchedule` 只对已存在的任务触发，而任务只能由 effect 创建——不在 `onInstall` 里注册第一个 `schedule.add`，它就永远不会跑起来。
+
+```js
+export async function onInstall(ctx) {
+  return {
+    effects: [
+      { type: "schedule.add", job_key: "daily", in_seconds: 60, every_seconds: 86400 },
+    ],
+  };
+}
+```
+
+重新安装和每次 playtest 推送都会再跑一遍 `onInstall`，所以里面的动作要幂等。`schedule.add` 按 `job_key` 覆盖，本身就是幂等的。
+
+## 开发
+
+```bash
+nodeloc-apps init my-bot --template bot
+```
+
+playtest 时，机器人**只会收到你自己的动作**——不然一份还没审过的代码就会看到全站每个人的帖子。`post.write` 在 playtest 里会被完整校验然后丢弃：能看到它想发什么，但发不出去。
