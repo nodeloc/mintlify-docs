@@ -131,6 +131,7 @@ Reads (via `api`, all require `await`; data is prefetched by the platform before
 | `api.kv.listPublic()` | Shared region (this install) | `kv.shared` |
 | `api.kv.app.get(key)` | What the whole app knows, across every install | `kv.app` |
 | `api.points.balance()` | Points balance | `points` |
+| `api.points.spends()` | This member's purchases from this installation (last 10) | `points.spend` |
 | `api.post.get(id)` / `api.topic.get(id)` | The post and topic this invocation is about | `post.read` |
 | `api.post.recentByUser(id)` | That person's recent posts, within the app's reach | `post.read` |
 
@@ -142,6 +143,7 @@ Writes (return `effects`; each is validated and committed in a single transactio
 | `kv.shared.set` / `kv.shared.delete` | `kv.shared` |
 | `ui.toast` / `ui.navigate` | `ui` |
 | `points.award` | `points` |
+| `points.spend` | `points.spend` (privileged) |
 | `rt.publish` | `realtime` |
 | `schedule.add` / `schedule.cancel` | `schedule` |
 | `kv.app.set` / `kv.app.delete` | `kv.app` |
@@ -162,8 +164,28 @@ Four things to remember:
 - **`kv.app` cannot be enumerated.** It answers only for the people this invocation is about, because on a real site the area is a lookup table with tens of thousands of rows — handing it over whole would put that list in memory on every post anybody writes.
 
 <Note>
-`context` is granted implicitly — no need to request it. `post.write`, `moderate.post`, `moderate.topic` and `webview` are **privileged**: only an admin grants them, and each has a site setting that has to be on as well. The rules for posting and acting on content are in [Bots](/en/miniprogram/bots).
+`context` is granted implicitly — no need to request it. `post.write`, `moderate.post`, `moderate.topic`, `webview` and `points.spend` are **privileged**: only an admin grants them (`points.spend` also has a site setting that has to be on). The rules for posting and acting on content are in [Bots](/en/miniprogram/bots).
 </Note>
+
+## Points: an account between the installer and the member, not money the platform hands out
+
+`points.award` is not minted from nothing. It's a transfer: points come out of the balance of **whoever installed the app** and go to the member. If the installer's balance can't cover the batch, the whole thing is refused (`E_POINTS_FUNDS`); if the site has no points system, refused the same way (`E_POINTS_UNAVAILABLE`). The one exception is an install an admin has explicitly marked "platform-funded" — only there does the site mint the points outright. Whoever is paying, the same three ceilings still apply: per-award, per-app-per-day, per-member-per-day.
+
+The other direction exists too: **selling something**. `points.spend` (a privileged scope, granted separately at review) doesn't charge anyone — it asks:
+
+```js
+{ type: "points.spend", request_id: "skin-gold", amount: 30, label: "Golden skin" }
+```
+
+All it does is make **the site itself** — not your UI — open a confirmation naming the amount, what it's for, and who gets paid. Only when the member taps "Pay" there do any points move, from their balance to the installer's (or straight to nothing, on a platform-funded install). Your `onSpend(ctx, api)` is then called, with `ctx.spend` carrying `{ request_id, amount, status: "paid" }` — that's where you deliver the goods (a `kv.set`, say). If the member taps "No thanks" or lets it expire (5 minutes), nothing happens.
+
+<Warning>
+**You cannot draw this confirmation or click through it.** Whatever your buttons say, what the member actually confirms comes from the site's own record, not your interface. One invocation can only ask one question at a time — a new ask replaces an unanswered one — and both a per-purchase and a per-member-per-day spending cap apply.
+</Warning>
+
+A crashed `onSpend` doesn't undo the payment — reconcile with `api.points.spends()` and deliver anything paid for but never granted; make delivery logic idempotent on `request_id`, since a retry must not deliver twice. A webview app hears the same outcome through `community.onSpend = fn`.
+
+Once an admin marks an install "platform-funded" from the app's admin page, that install's `points.award` is minted by the site and its `points.spend` simply retires the points — neither passes through anyone's balance. This is mainly for official, site-run mini apps that shouldn't be charging whoever installed them.
 
 ## Saying it in the reader's language
 

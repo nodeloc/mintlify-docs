@@ -131,6 +131,7 @@ export async function onMessage(ctx, api) {
 | `api.kv.listPublic()` | 共享区（本安装） | `kv.shared` |
 | `api.kv.app.get(key)` | 整个小程序的记忆，跨所有安装 | `kv.app` |
 | `api.points.balance()` | 积分余额 | `points` |
+| `api.points.spends()` | 当前成员在本安装下的付款记录（最近 10 条） | `points.spend` |
 | `api.post.get(id)` / `api.topic.get(id)` | 本次调用所关于的帖子和主题 | `post.read` |
 | `api.post.recentByUser(id)` | 那个人最近的帖子，限于小程序够得着的范围 | `post.read` |
 
@@ -142,6 +143,7 @@ export async function onMessage(ctx, api) {
 | `kv.shared.set` / `kv.shared.delete` | `kv.shared` |
 | `ui.toast` / `ui.navigate` | `ui` |
 | `points.award` | `points` |
+| `points.spend` | `points.spend`（特权） |
 | `rt.publish` | `realtime` |
 | `schedule.add` / `schedule.cancel` | `schedule` |
 | `kv.app.set` / `kv.app.delete` | `kv.app` |
@@ -162,8 +164,28 @@ export async function onMessage(ctx, api) {
 - **`kv.app` 不能被枚举。** 它只对本次调用涉及的人作答，因为真实站点上这块区域是一张几万行的查找表，整份交出去等于把它塞进每一次调用的内存里。
 
 <Note>
-`context` 是隐式授予的，不用申请。`post.write`、`moderate.post`、`moderate.topic`、`webview` 是**特权权限**：只有管理员能授予，而且各自还对应一个必须打开的站点设置。发帖和处置内容的详细规则见[机器人](/miniprogram/bots)。
+`context` 是隐式授予的，不用申请。`post.write`、`moderate.post`、`moderate.topic`、`webview`、`points.spend` 是**特权权限**：只有管理员能授予（`points.spend` 还各自对应一个必须打开的站点设置）。发帖和处置内容的详细规则见[机器人](/miniprogram/bots)。
 </Note>
+
+## 积分：安装方与成员之间的账，不是平台发的钱
+
+`points.award` 不是凭空发的。它是一次转账：积分从**安装这个小程序的人**的余额里扣出，转给获奖成员。安装方余额盖不住这一批时整批 effects 被拒（`E_POINTS_FUNDS`）；站点没有积分系统时同样被拒（`E_POINTS_UNAVAILABLE`）。唯一的例外是管理员把某个安装显式标记为「平台出资」，那个安装发的积分才由站点直接铸造。无论谁出钱，单次上限、每小程序每日上限、每成员每日上限三道闸都在。
+
+反方向也存在：**卖东西**。`points.spend`（特权权限，管理员审核时单独授予）不是扣费，是发问：
+
+```js
+{ type: "points.spend", request_id: "skin-gold", amount: 30, label: "金色皮肤" }
+```
+
+它做的唯一一件事，是让**站点自己**（不是你画的界面）弹出一个确认框，写明金额、用途和收款方。成员在那里点「支付」，积分才会从他的余额转给安装方（平台出资的安装则直接销毁），然后你的 `onSpend(ctx, api)` 被调用，`ctx.spend` 带着 `{ request_id, amount, status: "paid" }`——在这里发货（`kv.set` 之类）。成员点「不用了」或者放过期（5 分钟内不答复自动作废），什么都不会发生。
+
+<Warning>
+**这个确认框你画不了，也点不了。** 无论你的按钮上写什么，成员真正确认的内容都来自站点自己的记录，不是你的界面。一次调用只能问一个问题，新的问题会替掉还没回答的旧问题；单次和每成员每日花费都有上限。
+</Warning>
+
+`onSpend` 崩了钱照样算付了——用 `api.points.spends()` 对账，把付了钱没发的货补上，发货逻辑要按 `request_id` 幂等，重复调用不能重复发货。webview 小程序通过 `community.onSpend = fn` 收到同样的结果通知。
+
+管理员在应用后台把一个安装标记为「平台出资」后，那个安装的 `points.award` 由站点铸造、`points.spend` 直接销毁积分，不经过任何人的余额——多用于站方自营、不该向安装者收费的官方小程序。
 
 ## 用读者的语言说话
 
