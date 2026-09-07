@@ -143,6 +143,69 @@ Flair is a small label (text + emoji + colour) worn beside a member's name, only
 - **Links**: up to 3, shown as a small banner beside the node's topics — good for docs, chat groups or resource pages.
 - **Tags**: node owners can coin node-specific tags (no trust level required) and set how many tags a new topic must carry at minimum (0 makes tags optional).
 
+### Channels
+
+Connect the node to what you publish elsewhere: a new YouTube video or a Telegram post becomes a topic in the node on its own. A node can connect up to 10 channels; only the node owner manages them.
+
+<Frame>
+  <img src="/images/screenshots/en/mod-channels.png" alt="Mod tools — channels" />
+</Frame>
+
+Click "Connect a channel" and pick a type:
+
+<Frame>
+  <img src="/images/screenshots/en/mod-channels-add.png" alt="Connect a channel — pick a type" />
+</Frame>
+
+| Type | How to connect | How it syncs |
+| --- | --- | --- |
+| **YouTube** | Paste the channel page link, its `@handle` or the channel ID | Through YouTube's official push subscription (WebSub): a new video becomes a topic within minutes, with the video embedded. The subscription lasts 10 days and is renewed automatically |
+| **Telegram** | Read the channel through your own bot | Every channel post syncs in real time, formatting such as bold and links carries over, pictures and clips are uploaded to the site, albums become one topic, and edits in the channel update the topic |
+| **Webhook** | The system issues a push address with a secret | Anything that can send an HTTP request (n8n, Zapier, IFTTT, your own script) can feed the node; sources without a public API go this way |
+
+<Steps>
+  <Step title="Telegram: create a bot">
+    Ask [@BotFather](https://t.me/BotFather) for a new bot and copy its token.
+  </Step>
+  <Step title="Make it a channel administrator">
+    Add the bot as an administrator of your channel; otherwise it never sees the posts.
+  </Step>
+  <Step title="Connect and bind">
+    Pick Telegram on the Channels page, paste the token and connect. The page shows a `/bind CODE` command; post it in the channel once to bind it. The message is deleted automatically and the code is good for an hour. The page switches to "Live" as soon as the bind lands.
+  </Step>
+</Steps>
+
+<Frame>
+  <img src="/images/screenshots/en/mod-channels-telegram.png" alt="Binding a Telegram channel" />
+</Frame>
+
+Each channel has its own options (the pencil button):
+
+- **Post as**: the node owner, or the site's channel bot account.
+- **Publish manually**: when checked, synced items wait in the node's review queue until you approve them; by default they publish directly.
+- **Posts per day, at most**: 20 by default; anything beyond is skipped and recorded.
+- **Title prefix** and **tags to add**.
+
+The list shows each channel's state (Live / Waiting for confirmation / Subscription expired / Disabled), when it last synced, any error, and the items received most recently. The rotate icon only refreshes the status; a YouTube channel waiting for confirmation shows a "Resubscribe" button, and an unbound Telegram channel can "Issue a new code".
+
+<Frame>
+  <img src="/images/screenshots/en/mod-channels-youtube.png" alt="A YouTube channel and its recent items" />
+</Frame>
+
+Synced topics carry a source badge (From YouTube / From Telegram / Synced) that links back to the original.
+
+<Frame>
+  <img src="/images/screenshots/en/channel-badge.png" alt="The source badge in the topic list" />
+</Frame>
+
+<Note>
+  Opening the webhook address in a browser confirms it is valid and explains how to use it; to push, POST JSON to it: `{ "title": "...", "body": "...", "url": "original link", "external_id": "optional, for de-duplication" }`. The address carries the secret, so keep it private.
+</Note>
+
+<Note>
+  Synced topics do not earn the node owner any posting reward points.
+</Note>
+
 ### Node appearance
 
 On the node page, the pencil buttons on the banner and icon, or the palette button, open the appearance panel: change the node icon, upload light / dark banners, tune the key colour. Changes preview live and only take effect when saved. The key colour washes the whole node page — background, buttons and accents; it can also be switched off in settings, keeping the colour only on the node's disc.
@@ -153,13 +216,30 @@ On the node page, the pencil buttons on the banner and icon, or the palette butt
 
 ### Settings
 
-The settings page covers the node's description, admission mode (public / private) and posting rules, plus two tabs:
+The settings page covers the node's appearance, access and posting rules, plus two tabs:
 
 - **Official mark**: a verified merchant can apply for the official community mark on one of their nodes. Staff review the application, and the mark shows beside the node's name. The mark follows the merchant term — it lapses when the term ends or the node changes hands, and restores itself when the same owner renews.
 - **Ownership**: hand the node to another member.
 
 <Frame>
   <img src="/images/screenshots/en/mod-settings.png" alt="Mod tools — settings" />
+</Frame>
+
+#### Access and posting
+
+"Access and posting" has two columns that decide separately what **people who have not joined** and **node members** may do here. Underneath they map onto Discourse's category permissions (the everyone group and the node's member group):
+
+| People who have not joined | Node members |
+| --- | --- |
+| Cannot see this node (private node: non-members only get the intro and a join request) | Read only (only moderators post) |
+| Read only | Read and reply (only moderators start topics) |
+| Read and reply (starting a topic requires joining) | Start topics and reply |
+| Start topics and reply | |
+
+Non-members never get more than members: widening the non-member side pulls members up, narrowing the member side pulls non-members down. Moderators always have full rights.
+
+<Frame>
+  <img src="/images/screenshots/en/mod-access.png" alt="Settings — access and posting" />
 </Frame>
 
 ### Transferring ownership
