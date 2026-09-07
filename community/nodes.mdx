@@ -145,7 +145,7 @@ description: "加入感兴趣的节点，或创建自己的子社区"
 
 ### 频道
 
-把节点连到你在别处发布的内容：YouTube 发了视频、Telegram 频道发了消息，节点里自动出现对应的帖子。每个节点最多连接 10 个频道，只有节点主可以管理。
+把节点连到你在别处发布的内容：YouTube 发了视频、Telegram 频道发了消息、博客或 Bilibili 有了更新，节点里自动出现对应的帖子。每个节点最多连接 10 个频道，只有节点主可以管理。
 
 <Frame>
   <img src="/images/screenshots/mod-channels.png" alt="管理工具——频道" />
@@ -161,7 +161,11 @@ description: "加入感兴趣的节点，或创建自己的子社区"
 | --- | --- | --- |
 | **YouTube** | 粘贴频道主页链接、`@handle` 或频道 ID | 通过 YouTube 官方的推送订阅（WebSub），新视频发布后几分钟内生成帖子，视频链接直接嵌入播放器。订阅有效期 10 天，系统自动续订 |
 | **Telegram** | 用你自己的 Bot 读取频道 | 频道每条消息实时同步，加粗、链接等格式保留，图片和视频上传到站内，相册合并成一帖，频道里编辑消息帖子会跟着改 |
+| **RSS** | 粘贴博客、播客或任何网站的 RSS/Atom 地址，也可以直接粘贴网站首页，系统会自动找到订阅源 | 每 10 分钟检查一次，只同步接入之后发布的内容；帖子包含原文链接和一段摘要 |
+| **Bilibili** | 粘贴 UP 主空间链接或 UID | 通过站点配置的 RSSHub 读取投稿列表，每 10 分钟检查一次，新投稿生成带视频链接的帖子 |
 | **Webhook** | 系统生成一个带密钥的推送地址 | 任何能发 HTTP 请求的工具（n8n、Zapier、IFTTT、自己的脚本）都可以接入，公众号、小红书等没有开放接口的渠道走这里 |
+
+YouTube 以推送为主；订阅还没被 YouTube 确认时状态显示"轮询中"，期间系统改为每 10 分钟读取一次频道 feed，确认后自动切回推送。RSS 和 Bilibili 频道多一个"立即检查"按钮，不想等 10 分钟时可以手动触发。
 
 <Steps>
   <Step title="接入 Telegram：创建 Bot">
@@ -192,7 +196,7 @@ description: "加入感兴趣的节点，或创建自己的子社区"
   <img src="/images/screenshots/mod-channels-youtube.png" alt="YouTube 频道与最近同步" />
 </Frame>
 
-同步进来的帖子会带一个来源标记（来自 YouTube / 来自 Telegram / 自动同步），点击可回到原文。
+同步进来的帖子会带一个来源标记（来自 YouTube / 来自 Telegram / 来自 RSS / 来自 Bilibili / 自动同步），点击可回到原文。
 
 <Frame>
   <img src="/images/screenshots/channel-badge.png" alt="话题列表中的来源标记" />

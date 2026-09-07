@@ -145,7 +145,7 @@ Flair is a small label (text + emoji + colour) worn beside a member's name, only
 
 ### Channels
 
-Connect the node to what you publish elsewhere: a new YouTube video or a Telegram post becomes a topic in the node on its own. A node can connect up to 10 channels; only the node owner manages them.
+Connect the node to what you publish elsewhere: a new YouTube video, a Telegram post, a blog entry or a Bilibili upload becomes a topic in the node on its own. A node can connect up to 10 channels; only the node owner manages them.
 
 <Frame>
   <img src="/images/screenshots/en/mod-channels.png" alt="Mod tools — channels" />
@@ -161,7 +161,11 @@ Click "Connect a channel" and pick a type:
 | --- | --- | --- |
 | **YouTube** | Paste the channel page link, its `@handle` or the channel ID | Through YouTube's official push subscription (WebSub): a new video becomes a topic within minutes, with the video embedded. The subscription lasts 10 days and is renewed automatically |
 | **Telegram** | Read the channel through your own bot | Every channel post syncs in real time, formatting such as bold and links carries over, pictures and clips are uploaded to the site, albums become one topic, and edits in the channel update the topic |
+| **RSS** | Paste the RSS/Atom address of a blog, podcast or any site, or just the site's home page and the feed is discovered | Checked every 10 minutes; only items published after connecting are synced, each with the original link and a short excerpt |
+| **Bilibili** | Paste the uploader's space link or UID | Read through the site's RSSHub, checked every 10 minutes; new uploads become topics with the video link |
 | **Webhook** | The system issues a push address with a secret | Anything that can send an HTTP request (n8n, Zapier, IFTTT, your own script) can feed the node; sources without a public API go this way |
+
+YouTube is push-first: while YouTube has not yet confirmed the subscription the state reads "Polling" and the channel feed is read every 10 minutes instead, switching back to push once confirmed. RSS and Bilibili channels also have a "Check now" button for when you would rather not wait.
 
 <Steps>
   <Step title="Telegram: create a bot">
@@ -192,7 +196,7 @@ The list shows each channel's state (Live / Waiting for confirmation / Subscript
   <img src="/images/screenshots/en/mod-channels-youtube.png" alt="A YouTube channel and its recent items" />
 </Frame>
 
-Synced topics carry a source badge (From YouTube / From Telegram / Synced) that links back to the original.
+Synced topics carry a source badge (From YouTube / From Telegram / From RSS / From Bilibili / Synced) that links back to the original.
 
 <Frame>
   <img src="/images/screenshots/en/channel-badge.png" alt="The source badge in the topic list" />
