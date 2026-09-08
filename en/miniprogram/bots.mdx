@@ -81,6 +81,12 @@ Pinning reaches **only the app's own posts**, and only inside the node it is ins
 
 A post that already exists can still be handled by id with `post.pin` / `post.unpin`.
 
+`post.reply` takes two more options that likewise reach **only the reply itself**: `lock: true` closes it to further replies, and `collapse: true` opens it folded to a one-line bar in the nested view, for the reader to unfold with a click — for something that should be there without being in the way. All three need `moderate.topic`, are recorded, and are undone by a one-shot revert.
+
+```js
+{ type: "post.reply", topic_id: 481, raw: "Welcome…", pin: true, lock: true, collapse: true }
+```
+
 `post.lock` closes a reply, and everything nested under it, to further replies; the rest of the topic carries on. Unlike pinning it is **not** limited to the app's own posts — bringing somebody else's argument to a halt is the entire use for it — so it sits with deleting: never staff, never another moderator of this node, and never a topic's opening post, which would close the whole topic through a door marked "reply".
 
 Locks go in the same ledger, and are lifted when an admin undoes what an app did.
