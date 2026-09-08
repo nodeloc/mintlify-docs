@@ -66,7 +66,7 @@ An app that needs to be told something — an endpoint, a key, a category — de
 }
 ```
 
-Types: `string` `text` `secret` `url` `integer` `boolean` `enum`, at most 20 fields. `url` accepts https only; `enum` needs `options`.
+Types: `string` `text` `markdown` `secret` `url` `integer` `boolean` `enum`, at most 20 fields. `url` accepts https only; `enum` needs `options`. `markdown` is filled in with the same editor a post is written in, with @-mentions, emoji and preview, and is allowed a post's length — for greetings, notices and anything else the app will publish as is.
 
 Whatever is filled in arrives as `ctx.config`. Declare nothing and `ctx.config` is whatever an admin put there by hand.
 

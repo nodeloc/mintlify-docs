@@ -66,7 +66,7 @@ description: "小程序清单文件的字段说明、readme.md 展示规则与 p
 }
 ```
 
-类型：`string` `text` `secret` `url` `integer` `boolean` `enum`，最多 20 个字段。`url` 只接受 https，`enum` 必须给 `options`。
+类型：`string` `text` `markdown` `secret` `url` `integer` `boolean` `enum`，最多 20 个字段。`url` 只接受 https，`enum` 必须给 `options`。`markdown` 用和发帖一样的编辑器填写，支持 @ 用户、表情和预览，长度上限与帖子相同——适合欢迎语、公告这类会原样发出去的内容。
 
 填好的值作为 `ctx.config` 交给 handler。不声明 `settings` 也行，`ctx.config` 就是管理员手工填进去的东西。
 
