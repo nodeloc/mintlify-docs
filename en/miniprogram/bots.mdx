@@ -66,6 +66,8 @@ Declared in `triggers` in `app.json`:
 | `topic.close` / `topic.tag` | `moderate.topic` | Privileged |
 | `post.pin` / `post.unpin` | `moderate.topic` | Privileged; only the app's own posts |
 | `post.lock` / `post.unlock` | `moderate.topic` | Privileged; closes a branch to replies |
+| `user.mute` / `user.ban` | `moderate.user` | Privileged; for a while, in this node only |
+| `user.unmute` / `user.unban` | `moderate.user` | Privileged; only what the app itself applied |
 
 **Prefer `flag.create`.** It costs an ordinary scope because it ends with a person deciding; deleting costs a privileged one because it ends with somebody's post gone. An app that flags is most of the value of one that deletes, and it fails safe. Flags land in the review queue that node already has.
 
