@@ -99,6 +99,22 @@ A batch of effects is all or nothing. So when the `pin` is refused — a site-wi
 
 Everything is written to a ledger, so an admin can undo everything one app did in a single operation. Posting has a daily ceiling per app, and a second one per topic counted across every app, so two bots cannot fill a thread between them.
 
+## Holding a member back
+
+`user.mute` keeps a member from opening topics or replying in this node; `user.ban` also takes them out of the node's groups. Both need `moderate.user`, a scope of its own — acting on a person is a different thing from acting on a post, and an admin can grant one without the other.
+
+```js
+{ type: "user.mute", user_id: 4021, days: 7, reason: "Same link in a dozen topics" }
+{ type: "user.ban", user_id: 4021, days: 28 }
+{ type: "user.unmute", user_id: 4021 }
+```
+
+**A bot's restriction always runs out.** `days` must be 1, 3, 7 or 28, and there is no way to say "for good": a bug has to heal itself, and shutting somebody out of a node permanently is a decision a person makes and answers for. The member is told by private message, with the length and the reason.
+
+**Who cannot be held back:** staff, the node's owner, and its moderators. That last group includes the app's own account, so an app cannot mute another app working the same node, nor mute its way out of being switched off.
+
+`user.unmute` / `user.unban` lift only what **this app** applied. A moderator's decision is not an app's to undo, or the app becomes a way around the moderator. Every restriction is recorded, and an admin's one-shot revert lifts them all.
+
 ## What it can read
 
 | Call | What | Scope |
