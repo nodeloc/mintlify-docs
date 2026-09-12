@@ -48,6 +48,7 @@ Declared in `triggers` in `app.json`:
 | `post_liked` | Somebody liked a post |
 | `user_created` | A new member joined (only a site-wide install hears this — it belongs to no topic) |
 | `post_flagged` | Somebody raised a flag on a post |
+| `member_invited` | Somebody joined a node through a member's invite link (only installs on the node or the site hear this — it belongs to no topic) |
 
 <Warning>
 **A topic's first post arrives as `topic_created`, never as `post_created`.** The two do not both fire for it. An app that wants opening posts *and* replies has to subscribe to both — subscribing to `post_created` alone silently misses every opening post on the forum, with nothing in the logs to say so.

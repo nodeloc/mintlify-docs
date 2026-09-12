@@ -171,6 +171,8 @@ Four things to remember:
 
 `points.award` is not minted from nothing. It's a transfer: points come out of the balance of **whoever installed the app** and go to the member. If the installer's balance can't cover the batch, the whole thing is refused (`E_POINTS_FUNDS`); if the site has no points system, refused the same way (`E_POINTS_UNAVAILABLE`). The one exception is an install an admin has explicitly marked "platform-funded" — only there does the site mint the points outright. Whoever is paying, the same three ceilings still apply: per-award, per-app-per-day, per-member-per-day.
 
+In a call a member triggered, that member is who gets paid. A background run (`onTrigger` and friends) acts as the bot, so the effect names the recipient with `user_id` — and it may only be **the person the event is about**, `ctx.data.user_id`, such as the inviter in `member_invited`; anyone else is refused (`E_POINTS_DENIED`). That is the whole recipe for "X points per person brought in": a bot installed on the node listens for `member_invited` and sends `points.award` to `data.inviter_id`, funded by the node owner who installed it.
+
 The other direction exists too: **selling something**. `points.spend` (a privileged scope, granted separately at review) doesn't charge anyone — it asks:
 
 ```js

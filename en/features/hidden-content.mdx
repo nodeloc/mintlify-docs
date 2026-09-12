@@ -3,17 +3,21 @@ title: "Hidden Content"
 description: "How to use the three content tags: reply-to-view, login-to-view, and pay-to-view"
 ---
 
-When posting, you can hide parts of your content and require readers to meet certain conditions (reply, log in, or pay) before viewing. This is commonly used for resource sharing, giveaways, and similar scenarios.
+When posting, you can hide parts of your content and require readers to meet certain conditions (reply or log in) before viewing. This is commonly used for resource sharing, giveaways, and similar scenarios.
+
+<Note>
+  **Pay-to-view is currently switched off**: the editor no longer offers the button and nothing can be bought. Paid content published earlier stays visible to its buyers and the author; everyone else sees a "no longer for sale" notice.
+</Note>
 
 ## The Three Tags
 
 | Tag | Syntax | Effect |
 | --- | --- | --- |
-| Reply to view | `[reply]content[/reply]` | Visible after the reader replies in the topic |
+| Reply to view | `[reply]content[/reply]` | Visible after the reader replies in the topic; the hidden part opens in place as soon as the reply is posted, no page reload |
 | Login to view | `[login]content[/login]` | Visible to logged-in users only; guests see "Please log in to view the content" |
 | Pay to view | `[pay amount=100]content[/pay]` | Visible after the reader pays the specified Energy |
 
-You can also click the corresponding buttons in the editor toolbar (reply to view / login to view / pay to view) to insert the tags; pay-to-view opens an amount settings window.
+You can also click the corresponding buttons in the editor toolbar (reply to view / login to view) to insert the tags.
 
 ### Example
 
@@ -25,7 +29,9 @@ https://example.com/download
 [/reply]
 ```
 
-## Pay-to-View in Detail
+## Pay-to-View in Detail (switched off)
+
+Kept for reference only; none of this can be used at the moment.
 
 ### Pricing Rules
 

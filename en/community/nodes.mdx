@@ -47,6 +47,8 @@ Eligible users can create their own nodes:
 After creation:
 
 - The system automatically creates a member group and a management group, and automatically publishes a welcome post.
+- An "Invite friends" window opens with a ready-made permanent invite link; copy it and send it on (see "Invites and rewards" below).
+- You are notified of every new topic in the node from the start; switch it off under Mod tools → Settings.
 - As the node's creator, you can edit node info, set node rules, and add node links (up to 3).
 - The creator **cannot leave** their own node; you can transfer ownership to another member under "Mod tools → Settings → Ownership" (see "Transferring ownership" below).
 
@@ -55,8 +57,11 @@ After creation:
 Inside a node, the right-hand info panel shows the node's description, member count, topic count, post count, and admin list, and provides:
 
 - **Join / Leave**: manage your membership
+- **Invite**: members of an open node can mint their own invite links to bring friends in (see "Invites and rewards" below)
 - **About**: view the node's details
 - **Node Rules**: node-specific rules set by the creator — read them before posting
+
+Without permission to post or reply, the "New topic" and "Reply" buttons stay visible; pressing one explains what is in the way and how to get past it: log in, join on the spot and carry on (open nodes), request to join (private nodes), or — for a muted or banned member — the term and reason.
 
 <Frame>
   <img src="/images/screenshots/en/post-actions.png" alt="Info panel on a node page" />
@@ -75,7 +80,7 @@ Node owners and moderators enter the mod tools from the "Mod tools" button in th
 
 ### Overview and review queue
 
-- **Overview** shows this week's new members, topics and posts.
+- **Overview** is the node's dashboard: this week's pending reviews, join requests, new members, active members, new topics and replies; 30-day trends for members, topics and replies; live invite links and how many people joined through them; and the **inviter ranking** — over 7 / 30 / 90 days, all time or a custom date range — showing who brings people in, with rewards given right from there by the owner.
 - **Review queue** collects content flagged or waiting for approval inside the node, to approve or reject in one place.
 
 <Frame>
@@ -92,18 +97,13 @@ Write the node's own rules (a title plus a description). They are shown on the n
 
 ### Moderators and members
 
-Membership is managed across three tabs:
+Membership is managed across two tabs:
 
 - **Moderators**: add or remove moderators. Moderators can use the moderation features of the mod tools, but cannot change the node's settings.
-- **Invite links**: generate invite links with an expiry of 1 / 7 / 30 / 90 days and 1 / 5 / 10 / 25 uses. Anyone with a link joins directly — new users register first — and the list shows how each link has been used.
 - **Members**: see and manage everyone who has joined.
 
 <Frame>
   <img src="/images/screenshots/en/mod-members.png" alt="Mod tools — moderators and members" />
-</Frame>
-
-<Frame>
-  <img src="/images/screenshots/en/mod-members-invites.png" alt="Mod tools — invite links" />
 </Frame>
 
 <Note>
@@ -111,6 +111,31 @@ Membership is managed across three tabs:
 </Note>
 
 A private node shows visitors a landing page with "Request to join" instead of hiding away; the owner or moderators approve or deny requests in the mod tools.
+
+### Invites and rewards
+
+An invite link looks like `https://www.nodeloc.com/n/<node-slug>/i/<code>`. It opens on a page with the node's card — icon, "so-and-so invited you to join", member count, description. Newcomers sign up on that same page and land inside the node as members; a logged-in reader joins with one click; a member goes straight in.
+
+**Who can mint links**
+
+- The owner and moderators, any time, under the mod tools' **Invite links** section.
+- **Members of an open node** too: the "Invite" button on the node page opens their own invite window — mint a link, see the links they made, and how many members they have brought in.
+- In a private node only the owner and moderators can. A banned member cannot.
+
+Each link has an **expiry** (1 / 7 / 30 / 90 days or forever) and a **people limit** (1 / 5 / 10 / 25 / 100 or unlimited). The link minted when a node is created is permanent and unlimited. Any link can be revoked; the owner's Invite links section shows **every** link into the node with who made it, and can revoke any of them.
+
+<Frame>
+  <img src="/images/screenshots/en/mod-members-invites.png" alt="Mod tools — invite links" />
+</Frame>
+
+**Invite stats and rewards**
+
+The node records who joined through whose link. The overview's inviter ranking lists inviters and their headcount per period, and the owner can reward from there — every row has a "Reward" button:
+
+- **Points**: moved from the owner's own balance to the member; refused if the balance is short. Rewards are never minted by the platform.
+- **Something else**: a token, merchandise — given by the owner, with a note kept here for the record.
+
+The ranking shows what each inviter has already received, and the full reward history sits under it. To pay out automatically on a schedule (say, the weekly top three), install a [bot](/miniprogram/bots) on the node that listens for `member_invited`; the points it awards come out of the balance of the owner who installed it.
 
 ### Restricted users
 
@@ -121,7 +146,7 @@ Members who misbehave can be restricted per node, without affecting them anywher
 | Mute | Cannot post or reply in this node for the term |
 | Ban | Also leaves the node's member group and cannot rejoin during the term |
 
-Terms run 1 / 3 / 7 / 28 / 365 days or permanent, with an optional reason (sent to the member by message). While restricted, their posts in the node are blocked with a clear explanation.
+Terms run 1 / 3 / 7 / 28 / 365 days or permanent, with an optional reason (sent to the member by message). While restricted, the "New topic" and "Reply" buttons stay visible and pressing one shows the term and the reason; the server refuses anything that gets past the button.
 
 <Frame>
   <img src="/images/screenshots/en/mod-restricted.png" alt="Mod tools — restricted users" />
@@ -220,7 +245,7 @@ On the node page, the pencil buttons on the banner and icon, or the palette butt
 
 ### Settings
 
-The settings page covers the node's appearance, access and posting rules, plus two tabs:
+At the top of the settings page is a **New topic alerts** switch: the owner is notified of every new topic in the node by default and can turn it off here; a new owner after a transfer starts with it on too. Below that the page covers the node's appearance, access and posting rules, plus two tabs:
 
 - **Official mark**: a verified merchant can apply for the official community mark on one of their nodes. Staff review the application, and the mark shows beside the node's name. The mark follows the merchant term — it lapses when the term ends or the node changes hands, and restores itself when the same owner renews.
 - **Ownership**: hand the node to another member.

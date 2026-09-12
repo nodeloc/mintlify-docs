@@ -171,6 +171,8 @@ export async function onMessage(ctx, api) {
 
 `points.award` 不是凭空发的。它是一次转账：积分从**安装这个小程序的人**的余额里扣出，转给获奖成员。安装方余额盖不住这一批时整批 effects 被拒（`E_POINTS_FUNDS`）；站点没有积分系统时同样被拒（`E_POINTS_UNAVAILABLE`）。唯一的例外是管理员把某个安装显式标记为「平台出资」，那个安装发的积分才由站点直接铸造。无论谁出钱，单次上限、每小程序每日上限、每成员每日上限三道闸都在。
 
+成员自己触发的调用里，获奖的就是这位成员。后台运行（`onTrigger` 等）以机器人身份执行，要在 effect 里写 `user_id` 指明收款人，而且只能是**这次事件的主角**——`ctx.data.user_id`，比如 `member_invited` 里的邀请人；指向别人会被拒（`E_POINTS_DENIED`）。这就是"每拉一个人给 X 能量"的写法：装在节点上的机器人听 `member_invited`，给 `data.inviter_id` 发 `points.award`，能量从安装它的节点主余额里扣。
+
 反方向也存在：**卖东西**。`points.spend`（特权权限，管理员审核时单独授予）不是扣费，是发问：
 
 ```js
