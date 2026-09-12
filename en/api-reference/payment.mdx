@@ -490,6 +490,50 @@ On failure (`400` / `401`):
 - **Authentication**: signature verification
 - **Parameters**: `transaction_id`, `external_reference`, `amount`, `platform_fee`, `merchant_points`, `status`, `paid_at`, `signature`
 
+## EPay-compatible API (V2, RSA signatures)
+
+If your system already integrates with an [EPay (易支付)](https://p.ma3fu.com/doc/index.html) gateway, there is no need to rewrite it against the HMAC API above: NodeLoc serves the **EPay V2 protocol** directly — swap the gateway URL for NodeLoc and the currency becomes points. Anything that supports EPay (shops, card sellers, WHMCS modules, …) works as is.
+
+### Integration parameters
+
+| EPay setting | Value |
+| --- | --- |
+| Gateway URL | `https://www.nodeloc.com/payment/api` (the "EPay gateway URL" on the app card) |
+| Merchant ID `pid` | the numeric "Merchant ID (EPay pid)" on the app card |
+| Merchant private key | click "Generate RSA key pair" on the app card — the private key is shown once; or make your own pair and paste the public key into "Merchant RSA public key" |
+| Platform public key | the "Platform RSA public key" on the app card, for verifying NodeLoc's responses and callbacks |
+| Exchange rate | set when creating the app: how many points one unit of your currency buys (default 1 CNY = 100 points). `money` on the API is converted at this rate |
+| Sign type | `RSA` (SHA256WithRSA) |
+
+Signing follows EPay exactly: take every non-empty parameter except `sign` and `sign_type`, sort by name in ASCII order, join as `k1=v1&k2=v2`, sign with the merchant private key (SHA256WithRSA) and base64-encode. NodeLoc signs its responses and callbacks the same way with the platform private key; verify them with the platform public key. Every request carries a 10-digit `timestamp` in seconds; more than 5 minutes of drift is refused.
+
+### Endpoints
+
+| Endpoint | URL | Notes |
+| --- | --- | --- |
+| Page-jump payment | `GET/POST /payment/api/pay/submit` | form redirect; the buyer lands on the NodeLoc pay page |
+| Unified order | `POST /payment/api/pay/create` | returns `pay_type: "jump"` with the pay page as `pay_info` |
+| Order query | `POST /payment/api/pay/query` | either `trade_no` or `out_trade_no` |
+| Refund | `POST /payment/api/pay/refund` | **full** refunds only; `money` must equal the order amount |
+| Close order | `POST /payment/api/pay/close` | closes an unpaid order |
+| Merchant info | `POST /payment/api/merchant/info` | balance (points), today's/yesterday's order counts and takings |
+
+Parameter and response names match the EPay documentation, with these differences:
+
+- `money` is an amount in **your currency** (say `"9.90"`); NodeLoc converts it to points at the app's rate (at the default 100 points per unit, 9.90 becomes 990 points), rounded to a whole number, and refuses anything under one point. Callbacks and queries echo the `money` you sent; the balance and takings in merchant info are converted back the same way. The platform fee comes out of the points the merchant receives.
+- `type` is echoed back as sent (`alipay`, `wxpay` or empty); `method` and `device` are ignored and `pay_type` is always `jump`.
+- Re-creating the same `out_trade_no` returns the same `trade_no`; creating one that is already paid answers `code: 1`.
+- `buyer` in a query is the paying user's NodeLoc username.
+
+### Payment notification
+
+Once the buyer has paid:
+
+1. **Asynchronous notify**: NodeLoc sends a GET to your `notify_url` with `pid`, `trade_no`, `out_trade_no`, `api_trade_no`, `type`, `trade_status=TRADE_SUCCESS`, `addtime`, `endtime`, `name`, `money`, `param`, `buyer`, `timestamp`, `sign`, `sign_type`. After verifying the signature your server must answer with the string `success`; otherwise NodeLoc retries after 1 minute, 5 minutes, 30 minutes, 2 hours and 12 hours.
+2. **Synchronous return**: the buyer's browser is sent back to `return_url` with the same parameters.
+
+Always verify `sign` and check that `trade_status` is `TRADE_SUCCESS`; fields may be added to callbacks in future, so include every non-empty parameter when verifying.
+
 ---
 
 **Happy integrating!** 🚀

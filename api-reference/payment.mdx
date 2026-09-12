@@ -490,6 +490,50 @@ amount=100&order_id=transfer_20260425_001&to_user_id=123&to_username=alice
 - **认证**: 签名验证
 - **参数**: `transaction_id`, `external_reference`, `amount`, `platform_fee`, `merchant_points`, `status`, `paid_at`, `signature`
 
+## 易支付兼容接口（V2，RSA 签名）
+
+如果你的系统已经对接过[易支付](https://p.ma3fu.com/doc/index.html)（码上付）这类网关，不用再按上面的 HMAC 接口重写：NodeLoc 直接提供一套**易支付 V2 协议**的接口，把网关地址换成 NodeLoc、货币换成能量即可。任何支持易支付的程序（商城、发卡、WHMCS 插件等）都能直接用。
+
+### 对接参数
+
+| 易支付配置项 | 填什么 |
+| --- | --- |
+| 网关地址 | `https://www.nodeloc.com/payment/api`（应用卡片上的"易支付网关地址"） |
+| 商户 ID `pid` | 应用卡片上的"商户ID（易支付 pid）"，是一个数字 |
+| 商户私钥 | 在应用卡片点"生成 RSA 密钥对"，私钥只显示一次；也可以自己生成一对，把公钥填进"商户 RSA 公钥" |
+| 平台公钥 | 应用卡片上的"平台 RSA 公钥"，用来验证 NodeLoc 的响应和回调 |
+| 汇率 | 创建应用时设置"1 单位货币 = 多少能量"（默认 1 CNY = 100 能量）。接口里的 `money` 按它换算成能量向买家收取 |
+| 签名类型 | `RSA`（SHA256WithRSA） |
+
+签名规则与易支付一致：取所有非空参数，剔除 `sign` 和 `sign_type`，按参数名 ASCII 升序排列，拼成 `k1=v1&k2=v2`，用商户私钥做 SHA256WithRSA 签名后 base64。NodeLoc 的响应和回调用平台私钥同样方式签名，请用平台公钥验签。所有请求都要带 10 位秒级 `timestamp`，与服务器时间相差超过 5 分钟会被拒绝。
+
+### 接口一览
+
+| 接口 | 地址 | 说明 |
+| --- | --- | --- |
+| 页面跳转支付 | `GET/POST /payment/api/pay/submit` | 表单跳转，买家直接到 NodeLoc 支付页 |
+| 统一下单 | `POST /payment/api/pay/create` | 返回 `pay_type: "jump"` 和支付页地址 `pay_info` |
+| 订单查询 | `POST /payment/api/pay/query` | `trade_no` 或 `out_trade_no` 二选一 |
+| 订单退款 | `POST /payment/api/pay/refund` | 仅支持**全额**退款，`money` 必须等于订单金额 |
+| 关闭订单 | `POST /payment/api/pay/close` | 关闭未支付的订单 |
+| 商户信息 | `POST /payment/api/merchant/info` | 余额（能量）、今日/昨日订单数与收入 |
+
+参数名、返回字段与易支付文档相同，以下几点不同：
+
+- `money` 是你**自己货币**的金额（例如 `"9.90"` 元），NodeLoc 按应用设置的汇率换算成能量向买家收取（默认汇率 100 时 9.90 元 = 990 能量），四舍五入到整数，不足 1 能量会被拒绝。回调和查询里的 `money` 原样返回你传的金额；商户信息里的余额和收入也按汇率折成货币。平台手续费按站点设置从商户到账的能量中扣除。
+- `type` 随便传（`alipay`、`wxpay` 或留空），只会原样回传；`method`、`device` 被忽略，`pay_type` 固定返回 `jump`。
+- 同一个 `out_trade_no` 重复下单会拿到同一个 `trade_no`；已支付的订单再次下单返回 `code: 1`。
+- 查询接口的 `buyer` 是付款用户的 NodeLoc 用户名。
+
+### 支付结果通知
+
+买家支付成功后：
+
+1. **异步通知**：NodeLoc 以 GET 请求你的 `notify_url`，参数为 `pid`、`trade_no`、`out_trade_no`、`api_trade_no`、`type`、`trade_status=TRADE_SUCCESS`、`addtime`、`endtime`、`name`、`money`、`param`、`buyer`、`timestamp`、`sign`、`sign_type`。你的服务器验签后需返回字符串 `success`；否则会在 1 分钟、5 分钟、30 分钟、2 小时、12 小时后重试，共 5 次。
+2. **同步跳转**：买家浏览器被带回 `return_url`，带同样的参数。
+
+务必验证 `sign` 并检查 `trade_status` 是否为 `TRADE_SUCCESS`；将来可能增加回调字段，验签时请把所有非空参数都算进去。
+
 ---
 
 **祝对接顺利！** 🚀
