@@ -525,6 +525,23 @@ amount=100&order_id=transfer_20260425_001&to_user_id=123&to_username=alice
 - 同一个 `out_trade_no` 重复下单会拿到同一个 `trade_no`；已支付的订单再次下单返回 `code: 1`。
 - 查询接口的 `buyer` 是付款用户的 NodeLoc 用户名。
 
+### V1 旧版接口（MD5 签名）
+
+很多程序（发卡、商城、WHMCS 网关插件等）走的是易支付 **V1** 协议：`submit.php` / `mapi.php` / `api.php`，用"商户密钥 KEY"做 MD5 签名，没有时间戳。NodeLoc 同样提供，网关地址仍是 `https://www.nodeloc.com/payment/api`，商户密钥在应用卡片的"商户密钥 KEY（易支付 V1 / MD5）"一栏，可随时重置。
+
+| 接口 | 地址 | 说明 |
+| --- | --- | --- |
+| 页面跳转支付 | `GET/POST /payment/api/submit.php` | 参数 `pid`、`type`（可空）、`out_trade_no`、`notify_url`、`return_url`、`name`、`money`、`param`、`sign`、`sign_type=MD5` |
+| API 支付 | `POST /payment/api/mapi.php` | 返回 `{ code: 1, trade_no, payurl }`，直接跳转 `payurl` |
+| 查询单个订单 | `GET /payment/api/api.php?act=order&pid=&key=&out_trade_no=` | 也可传 `trade_no`；`status` 1 已支付 |
+| 批量查询 | `GET /payment/api/api.php?act=orders&pid=&key=` | `limit`（≤50）、`page` |
+| 商户信息 | `GET /payment/api/api.php?act=query&pid=&key=` | 余额按汇率折成货币 |
+| 退款 | `POST /payment/api/api.php?act=refund` | `pid`、`key`、`trade_no`/`out_trade_no`、`money`（须为全额）；按 V1 约定成功返回 `code: 0` |
+
+MD5 签名：非空参数剔除 `sign`、`sign_type`，按参数名 ASCII 升序拼成 `a=b&c=d`（值不做 URL 编码），末尾直接拼接商户密钥后取 MD5 小写。V1 订单支付后的异步通知和同步跳转参数为 `pid`、`trade_no`、`out_trade_no`、`type`、`name`、`money`、`trade_status`、`param`、`sign`、`sign_type=MD5`，同样用商户密钥验签，异步通知请返回 `success`。
+
+同一个应用可以同时接 V1 和 V2：请求里 `sign_type=RSA` 走 V2 验签，否则按 V1 的 MD5 处理。
+
 ### 支付结果通知
 
 买家支付成功后：

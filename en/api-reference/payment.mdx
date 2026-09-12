@@ -525,6 +525,23 @@ Parameter and response names match the EPay documentation, with these difference
 - Re-creating the same `out_trade_no` returns the same `trade_no`; creating one that is already paid answers `code: 1`.
 - `buyer` in a query is the paying user's NodeLoc username.
 
+### V1 legacy API (MD5 signatures)
+
+Many programs (card sellers, shops, WHMCS gateway modules, …) speak EPay **V1**: `submit.php` / `mapi.php` / `api.php`, signed with the merchant KEY by MD5 and without timestamps. NodeLoc serves that too, at the same gateway URL `https://www.nodeloc.com/payment/api`; the key is the "Merchant KEY (EPay V1 / MD5)" on the app card and can be reset at any time.
+
+| Endpoint | URL | Notes |
+| --- | --- | --- |
+| Page-jump payment | `GET/POST /payment/api/submit.php` | `pid`, `type` (optional), `out_trade_no`, `notify_url`, `return_url`, `name`, `money`, `param`, `sign`, `sign_type=MD5` |
+| API payment | `POST /payment/api/mapi.php` | answers `{ code: 1, trade_no, payurl }`; send the buyer to `payurl` |
+| Single order | `GET /payment/api/api.php?act=order&pid=&key=&out_trade_no=` | or `trade_no`; `status` 1 means paid |
+| Order list | `GET /payment/api/api.php?act=orders&pid=&key=` | `limit` (≤50), `page` |
+| Merchant info | `GET /payment/api/api.php?act=query&pid=&key=` | balance converted to currency at the app's rate |
+| Refund | `POST /payment/api/api.php?act=refund` | `pid`, `key`, `trade_no`/`out_trade_no`, `money` (the full amount); as in V1, success is `code: 0` |
+
+MD5 signing: drop `sign`, `sign_type` and empty values, sort the rest by name in ASCII order, join as `a=b&c=d` (values not URL-encoded), append the merchant key and take the lowercase MD5. Notify and return callbacks for V1 orders carry `pid`, `trade_no`, `out_trade_no`, `type`, `name`, `money`, `trade_status`, `param`, `sign`, `sign_type=MD5`, signed the same way; answer the notify with `success`.
+
+One application can use V1 and V2 side by side: a request with `sign_type=RSA` is verified as V2, anything else as V1 MD5.
+
 ### Payment notification
 
 Once the buyer has paid:
