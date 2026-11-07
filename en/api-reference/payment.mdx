@@ -160,7 +160,7 @@ Verification steps:
 2. **Extract the other parameters**: all parameters except `signature` itself
 3. **Sort by key name**: arrange in alphabetical order
 4. **Build the string**: in the format `key1=value1&key2=value2...`
-5. **Compute the signature**: `HMAC-SHA256(secret_key, param_string)`
+5. **Compute the signature**: `HMAC-SHA256(token_hash, param_string)`, where `token_hash = SHA256(your_token)`, same as initiating payment
 6. **Compare signatures**: the computed signature must exactly match the received one
 
 **Signature parameter example**:
@@ -204,7 +204,7 @@ Same as initiating payment:
 
 1. Parameters: `transaction_id`
 2. Build the string: `transaction_id=txn_xxx`
-3. Signature: `HMAC-SHA256(secret_key, param_string)`
+3. Signature: `HMAC-SHA256(token_hash, param_string)`, where `token_hash = SHA256(your_token)`
 
 ### Response data
 
@@ -242,6 +242,61 @@ Same as initiating payment:
 - Scheduled jobs checking the status of unpaid orders
 - Users actively querying order status
 - A fallback after callback failure
+
+---
+
+## Refund
+
+Refund a paid order **in full** to the payer: the payer gets back every point they paid, and the payment app's applicant returns what they actually received (`merchant_points`). The platform fee is not charged back to the merchant.
+
+### API endpoint
+
+```text
+POST https://www.nodeloc.com/payment/refund/:payment_id
+```
+
+### Request parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `transaction_id` | String | Yes | ID of the transaction to refund |
+| `amount` | Integer | Yes | Points to refund; must equal the order amount (full refunds only) |
+| `signature` | String | Yes | HMAC-SHA256 signature |
+
+### Signature algorithm
+
+1. Parameters: `amount`, `transaction_id`
+2. Build the string: `amount=100&transaction_id=txn_xxx`
+3. Signature: `HMAC-SHA256(token_hash, param_string)`, where `token_hash = SHA256(your_token)`
+
+### Response data
+
+On success (`200 OK`):
+
+```json
+{
+  "success": true,
+  "transaction_id": "txn_xxx",
+  "external_reference": "order_123",
+  "status": "refunded",
+  "amount": 100,
+  "merchant_points": 95
+}
+```
+
+On failure (`400` / `401`):
+
+```json
+{
+  "success": false,
+  "error": "Transaction is not paid"
+}
+```
+
+- Calling it again for an order that is already refunded returns success without refunding twice, so retries are safe.
+- `Only full refunds are supported`: `amount` does not match the order amount.
+- `Transaction is not paid`: the order has not been paid.
+- If the applicant does not have enough points to return `merchant_points`, the refund fails and the order is left unchanged.
 
 ---
 
@@ -441,7 +496,7 @@ On failure (`400` / `401`):
   </Accordion>
 
   <Accordion title="Q: Are refunds supported?">
-    Automatic refunds are not currently supported; contact an admin for manual handling.
+    Yes, full refunds. Call the [refund API](#refund); no need to contact an admin.
   </Accordion>
 
   <Accordion title="Q: Do orders expire?">
@@ -474,6 +529,13 @@ On failure (`400` / `401`):
 - **Authentication**: signature verification
 - **Request**: `transaction_id`, `signature`
 - **Response**: full transaction info (see above)
+
+### Refund
+
+- **URL**: `POST /payment/refund/:payment_id`
+- **Authentication**: signature verification
+- **Request**: `transaction_id`, `amount`, `signature`
+- **Response**: `success`, `transaction_id`, `external_reference`, `status`, `amount`, `merchant_points`
 
 ### User transfer
 

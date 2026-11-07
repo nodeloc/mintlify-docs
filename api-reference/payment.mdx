@@ -160,7 +160,7 @@ https://example.com/payment/callback?
 2. **提取其他参数**: 所有参数除了 `signature` 本身
 3. **按键名排序**: 字母顺序排列
 4. **拼接字符串**: 格式 `key1=value1&key2=value2...`
-5. **计算签名**: `HMAC-SHA256(secret_key, param_string)`
+5. **计算签名**: `HMAC-SHA256(token_hash, param_string)`，`token_hash = SHA256(your_token)`，与发起支付相同
 6. **比对签名**: 计算出的签名与接收到的签名必须完全一致
 
 **签名参数示例**：
@@ -204,7 +204,7 @@ POST https://www.nodeloc.com/payment/query/:payment_id
 
 1. 参数：`transaction_id`
 2. 拼接：`transaction_id=txn_xxx`
-3. 签名：`HMAC-SHA256(secret_key, param_string)`
+3. 签名：`HMAC-SHA256(token_hash, param_string)`，`token_hash = SHA256(your_token)`
 
 ### 响应数据
 
@@ -242,6 +242,61 @@ POST https://www.nodeloc.com/payment/query/:payment_id
 - 定时任务检查待支付订单状态
 - 用户主动查询订单状态
 - 回调失败后的补救措施
+
+---
+
+## 退款
+
+把一笔已支付的订单**全额**退回给付款用户：付款用户拿回支付的全部能量，商户应用申请人退回当时实际到账的能量（`merchant_points`），平台手续费不向商户收取。
+
+### API 接口
+
+```text
+POST https://www.nodeloc.com/payment/refund/:payment_id
+```
+
+### 请求参数
+
+| 参数 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `transaction_id` | String | 是 | 要退款的交易ID |
+| `amount` | Integer | 是 | 退款能量，必须等于订单金额（只支持全额退款） |
+| `signature` | String | 是 | HMAC-SHA256 签名 |
+
+### 签名算法
+
+1. 参数：`amount`, `transaction_id`
+2. 拼接：`amount=100&transaction_id=txn_xxx`
+3. 签名：`HMAC-SHA256(token_hash, param_string)`，`token_hash = SHA256(your_token)`
+
+### 响应数据
+
+成功时（`200 OK`）：
+
+```json
+{
+  "success": true,
+  "transaction_id": "txn_xxx",
+  "external_reference": "order_123",
+  "status": "refunded",
+  "amount": 100,
+  "merchant_points": 95
+}
+```
+
+失败时（`400` / `401`）：
+
+```json
+{
+  "success": false,
+  "error": "Transaction is not paid"
+}
+```
+
+- 对已退款的订单重复调用会直接返回成功，不会重复退款，可以放心重试。
+- `Only full refunds are supported`：`amount` 与订单金额不一致。
+- `Transaction is not paid`：订单还没有支付成功。
+- 申请人账户能量不足以退回 `merchant_points` 时退款失败，订单状态不变。
 
 ---
 
@@ -441,7 +496,7 @@ amount=100&order_id=transfer_20260425_001&to_user_id=123&to_username=alice
   </Accordion>
 
   <Accordion title="Q: 支持退款吗？">
-    目前不支持自动退款，需要联系管理员手动处理。
+    支持全额退款，调用[退款接口](#退款)即可，不需要联系管理员。
   </Accordion>
 
   <Accordion title="Q: 订单会过期吗？">
@@ -474,6 +529,13 @@ amount=100&order_id=transfer_20260425_001&to_user_id=123&to_username=alice
 - **认证**: 签名验证
 - **请求**: `transaction_id`, `signature`
 - **响应**: 完整交易信息（见上文）
+
+### 退款
+
+- **URL**: `POST /payment/refund/:payment_id`
+- **认证**: 签名验证
+- **请求**: `transaction_id`, `amount`, `signature`
+- **响应**: `success`, `transaction_id`, `external_reference`, `status`, `amount`, `merchant_points`
 
 ### 用户转账
 
